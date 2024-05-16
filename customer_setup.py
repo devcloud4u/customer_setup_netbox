@@ -1,3 +1,5 @@
+# netbox/extras/scripts/customer_setup.py
+
 from extras.scripts import Script, StringVar, IntegerVar
 from dcim.models import Site
 from ipam.models import VLAN, Prefix
@@ -20,7 +22,7 @@ def format_vlan_id(vlan_id):
     vlan_number = int(vlan_id)
     if vlan_number > 254:
         raise ValueError("VLAN can be a maximum of 254. Please enter a VLAN less than 254.")
-    return vlan_id.zfill(4)
+    return str(vlan_id).zfill(4)
 
 
 def align_to_subnet(ip_base, mask):
