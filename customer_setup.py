@@ -8,14 +8,10 @@ from django.template.defaultfilters import slugify
 from netaddr import IPNetwork
 
 
-def increment_last_octet(ip_base, increment):
-    parts = ip_base.split('.')
-    last_octet = int(parts[-1]) + increment
-    if last_octet > 246:
-        raise ValueError(
-            f"Specified subnet value {last_octet}, exceeds the maximum IP subnet limit (246). Please enter another subnet base.")
-    new_base = '.'.join(parts[:-1] + [str(last_octet)])
-    return new_base
+def increment_last_octet(ip_base, increment, subnet_mask):
+    network = IPNetwork(f"{ip_base}/{subnet_mask}")
+    new_ip = str(network.ip + increment)
+    return new_ip
 
 
 def format_vlan_id(vlan_id):
@@ -96,7 +92,7 @@ class CustomerSetupScript(Script):
 
             # Create additional VLANs and prefixes for office site
             base_ip = aligned_office_prefix_base
-            subnet_addresses = [increment_last_octet(base_ip, i) for i in range(5)]
+            subnet_addresses = [increment_last_octet(base_ip, i, 24) for i in range(5)]
 
             vlans = [
                 (20, "Office", subnet_addresses[1]),
