@@ -1,3 +1,5 @@
+import random
+
 from extras.scripts import Script, StringVar, IntegerVar
 from dcim.models import Site
 from ipam.models import VLAN, Prefix
@@ -5,6 +7,35 @@ from tenancy.models import Tenant, TenantGroup
 from extras.models import JournalEntry
 from django.template.defaultfilters import slugify
 from netaddr import IPNetwork, IPAddress
+
+
+def generate_password(length=20):
+    # Define the character sets
+    letters = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ"
+    digits = "123456789"
+    special_characters = ".-"
+
+    # Ensure that the password length is at least 4 to include at least one character from each set
+    if length < 4:
+        raise ValueError("Password length must be at least 4 characters")
+
+    # Create the password by including at least one character from each set
+    password = [
+        random.choice(letters),
+        random.choice(digits),
+        random.choice(special_characters),
+        random.choice(letters + digits + special_characters)
+    ]
+
+    # Fill the remaining length of the password
+    remaining_length = length - 4
+    all_characters = letters + digits + special_characters
+    password += random.choices(all_characters, k=remaining_length)
+
+    # Shuffle the password list to ensure randomness
+    random.shuffle(password)
+
+    return ''.join(password)
 
 
 def increment_last_octet(ip_base, count):
@@ -112,8 +143,20 @@ class CustomerSetupScript(Script):
             infra_prefix, created = Prefix.objects.get_or_create(prefix=infra_prefix_str, site=office_site, tenant=tenant)
             self.log_info(f"Infra prefix {'created' if created else 'retrieved'}: {infra_prefix.prefix}")
 
-            script_template = f""":global NameDevice "{data['customer_short_name']}-{data['customer_office_place']}-Office"
-            :global AdminPassword "YourPasswordHere"
+            password = generate_password(20)
+            script_template = f"""
+            
+            passbolt please save this
+            ======
+            uri: {data['local_vpn_ip']}:35300
+            username: admin
+            password: {password}
+            
+            Office mikrotik code to copy paste
+            ======
+            
+            :global NameDevice "{data['customer_short_name']}-{data['customer_office_place']}-Office"
+            :global AdminPassword "{password}"
             :global DnsServers "8.8.8.8,8.8.4.4,1.1.1.1"
 
             :global CustomerOfficeBigSubnet "{base_ip}.0/21"
@@ -147,6 +190,29 @@ class CustomerSetupScript(Script):
             :global GuestIpNetwork "{increment_last_octet(subnet_addresses[4], 0)}"
             :global GuestIpSubnet "{increment_last_octet(subnet_addresses[4], 0)}/24"
             :global PoolGuest "{increment_last_octet(subnet_addresses[4], 99)}-{increment_last_octet(subnet_addresses[4], 253)}"
+            
+            # static variables
+            :global OpenVPNProfileName "OpenVPN_Profile"
+            :global OpenVPNClientName "OpenVPN_Cloud"
+            :global ServiceSubnet "10.200.110.0/24"
+            :global OpenVPNServerInterfaceIP "10.200.110.1"
+            
+            # Cloud Server and Client Office side variables
+            :global OpenVPNCloudFirewallIPorHost "95.211.35.162"
+            :global OpenVPNCloudUsername "{data['customer_short_name']}-{data['customer_office_place']}-Office"
+            :global OpenVPNCloudPassword "{generate_password(20)}"
+            :global OpenVPNLocalIP "{data['local_vpn_ip']}"
+            :global OpenVPNOfficeSubnets "{aligned_office_prefix_base}/21"
+            
+            # only Cloud Server Side variables
+            :global CustomerAdresList "{cloud_vlan_name}-{data['customer_short_name']}"
+            :global CustomerCloudSubnet "10.0.{data['customer_cloud_vlanid']}.0/24"
+            :global CustomerCloudSubnetComment "{data['customer_short_name']} Cloud Subnet"
+            :global CustomerInterfaceList "{data['customer_short_name']}"
+            :global CustomerFirewallRuleComment "{data['customer_short_name']} to {data['customer_short_name']}"
+            :global OpenVPNServerInterfaceName "OpenVPN_{data['customer_short_name']}-{data['customer_office_place']}-Office"
+            :global ClientVLanInterfaceName "VLan-{cloud_vlan_name}-{data['customer_short_name']}-Cloud"
+            :global ClientVLanID "{data['customer_cloud_vlanid']}"
             """
             office_site_template = '''
             ### reset to factory
@@ -436,12 +502,12 @@ class CustomerSetupScript(Script):
             JournalEntry.objects.create(
                 assigned_object=office_site,
                 created_by=self.request.user,
-                comments=f'```\n{office_site_template} \n{script_template}\n```'
+                comments=f'```\n{script_template} \n{office_site_template}\n```'
             )
             JournalEntry.objects.create(
                 assigned_object=cloud_site,
                 created_by=self.request.user,
-                comments=f'```\n{cloud_site_template} \n{script_template}\n```'
+                comments=f'```\n{script_template} \n{cloud_site_template}\n```'
             )
 
             self.log_success("Customer setup script completed successfully")
