@@ -3,6 +3,7 @@ from dcim.models import Site
 from ipam.models import VLAN, Prefix
 from tenancy.models import Tenant
 from django.template.defaultfilters import slugify
+from netaddr import IPNetwork
 
 
 def increment_last_octet(ip_base, increment):
@@ -19,6 +20,11 @@ def format_vlan_id(vlan_id):
     if vlan_number > 254:
         raise ValueError("VLAN can be a maximum of 254. Please enter a VLAN less than 254.")
     return vlan_id.zfill(4)
+
+
+def align_to_subnet(ip_base, mask):
+    network = IPNetwork(f"{ip_base}/{mask}")
+    return str(network.network)
 
 
 class CustomerSetupScript(Script):
@@ -48,7 +54,8 @@ class CustomerSetupScript(Script):
             cloud_site, created = Site.objects.get_or_create(name=cloud_site_name, slug=cloud_site_slug, tenant=tenant)
             self.log_info(f"Cloud site {'created' if created else 'retrieved'}: {cloud_site.name}")
 
-            office_prefix_str = f"{data['customer_21_subnet']}.0/21"
+            aligned_office_prefix_base = align_to_subnet(data['customer_21_subnet'], 21)
+            office_prefix_str = f"{aligned_office_prefix_base}/21"
             office_prefix, created = Prefix.objects.get_or_create(prefix=office_prefix_str, site=office_site)
             self.log_info(f"/21 prefix for office site {'created' if created else 'retrieved'}: {office_prefix.prefix}")
 
@@ -60,7 +67,7 @@ class CustomerSetupScript(Script):
             cloud_prefix, created = Prefix.objects.get_or_create(prefix=cloud_prefix_str, site=cloud_site, vlan=cloud_vlan)
             self.log_info(f"Cloud prefix {'created' if created else 'retrieved'}: {cloud_prefix.prefix}")
 
-            base_ip = data['customer_21_subnet']
+            base_ip = aligned_office_prefix_base
             subnet_addresses = [increment_last_octet(base_ip, i) for i in range(5)]
 
             vlans = [
