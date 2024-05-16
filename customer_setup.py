@@ -3,6 +3,7 @@ import random
 from extras.scripts import Script, StringVar, IntegerVar
 from dcim.models import Site
 from ipam.models import VLAN, Prefix
+from ipam.choices import PrefixStatusChoices
 from tenancy.models import Tenant, TenantGroup
 from extras.models import JournalEntry
 from django.template.defaultfilters import slugify
@@ -105,7 +106,7 @@ class CustomerSetupScript(Script):
 
             aligned_office_prefix_base = align_to_subnet(validated_subnet_base, 21)
             office_prefix_str = f"{aligned_office_prefix_base}/21"
-            office_prefix, created = Prefix.objects.get_or_create(prefix=office_prefix_str, site=office_site, tenant=tenant)
+            office_prefix, created = Prefix.objects.get_or_create(prefix=office_prefix_str, site=office_site, tenant=tenant, status=PrefixStatusChoices.STATUS_CONTAINER, is_pool=True)
             self.log_info(f"/21 prefix for office site {'created' if created else 'retrieved'}: {office_prefix.prefix}")
 
             cloud_vlan_id = int(data['customer_cloud_vlanid'])
