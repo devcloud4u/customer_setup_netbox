@@ -2,6 +2,7 @@ from extras.scripts import Script, StringVar, IntegerVar
 from dcim.models import Site
 from ipam.models import VLAN, Prefix
 from tenancy.models import Tenant, TenantGroup
+from extras.models import JournalEntry
 from django.template.defaultfilters import slugify
 from netaddr import IPNetwork, IPAddress
 
@@ -65,6 +66,18 @@ class CustomerSetupScript(Script):
             cloud_site_slug = slugify(cloud_site_name)
             cloud_site, created = Site.objects.get_or_create(name=cloud_site_name, slug=cloud_site_slug, tenant=tenant)
             self.log_info(f"Cloud site {'created' if created else 'retrieved'}: {cloud_site.name}")
+
+            # Add journal entries for the sites
+            JournalEntry.objects.create(
+                assigned_object=office_site,
+                created_by=self.request.user,
+                comments="Office site created as part of the customer setup script."
+            )
+            JournalEntry.objects.create(
+                assigned_object=cloud_site,
+                created_by=self.request.user,
+                comments="Cloud site created as part of the customer setup script."
+            )
 
             aligned_office_prefix_base = align_to_subnet(validated_subnet_base, 21)
             office_prefix_str = f"{aligned_office_prefix_base}/21"
