@@ -51,8 +51,8 @@ class CustomerSetupScript(Script):
     def run(self, data, commit):
         try:
             validated_subnet_base = validate_and_format_subnet_base(data['customer_21_subnet'])
-            tenant_group = TenantGroup.objects.get_or_create(name='Customers')
-            tenant, created = Tenant.objects.get_or_create(name=data['customer_full_name'], group=tenant_group.id)
+            tenant_group, created = TenantGroup.objects.get_or_create(name='Customers')
+            tenant, created = Tenant.objects.get_or_create(name=data['customer_full_name'], group=tenant_group)
             self.log_info(f"Tenant {'created' if created else 'retrieved'}: {tenant.name}")
 
             office_site_name = f"{data['customer_short_name']} {data['customer_office_place']}"
