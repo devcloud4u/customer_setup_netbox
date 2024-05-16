@@ -7,6 +7,11 @@ from django.template.defaultfilters import slugify
 from netaddr import IPNetwork, IPAddress
 
 
+def increment_last_octet(ip_base, count):
+    ip = IPAddress(ip_base)
+    return str(ip + count)
+
+
 def increment_subnet(ip_base, increment, subnet_mask):
     network = IPNetwork(f"{ip_base}/{subnet_mask}")
     new_network = network.next(increment)
@@ -113,35 +118,35 @@ class CustomerSetupScript(Script):
 
             :global CustomerOfficeBigSubnet "{base_ip}.0/21"
 
-            :global InfraGWIp "{subnet_addresses[1]}"
-            :global InfraIp "{subnet_addresses[1]}/24"
-            :global InfraIpNetwork "{subnet_addresses[0]}"
-            :global InfraIpSubnet "{subnet_addresses[0]}/24"
-            :global PoolInfra "{subnet_addresses[99]}-{subnet_addresses[253]}"
+            :global InfraGWIp "{increment_last_octet(subnet_addresses[0], 1)}"
+            :global InfraIp "{increment_last_octet(subnet_addresses[0], 1)}/24"
+            :global InfraIpNetwork "{increment_last_octet(subnet_addresses[0], 0)}"
+            :global InfraIpSubnet "{increment_last_octet(subnet_addresses[0], 0)}/24"
+            :global PoolInfra "{increment_last_octet(subnet_addresses[0], 99)}-{increment_last_octet(subnet_addresses[0], 253)}"
 
-            :global OfficeGWIp "{subnet_addresses[1]}.1"
-            :global OfficeIp "{subnet_addresses[1]}.1/24"
-            :global OfficeIpNetwork "{subnet_addresses[1]}.0"
-            :global OfficeIpSubnet "{subnet_addresses[1]}.0/24"
-            :global PoolOffice "{subnet_addresses[1]}.99-{subnet_addresses[1]}.253"
+            :global OfficeGWIp "{increment_last_octet(subnet_addresses[1], 1)}"
+            :global OfficeIp "{increment_last_octet(subnet_addresses[1], 1)}/24"
+            :global OfficeIpNetwork "{increment_last_octet(subnet_addresses[1], 0)}"
+            :global OfficeIpSubnet "{increment_last_octet(subnet_addresses[1], 0)}/24"
+            :global PoolOffice "{increment_last_octet(subnet_addresses[1], 99)}-{increment_last_octet(subnet_addresses[1], 253)}"
 
-            :global VoipGWIp "{subnet_addresses[2]}.1"
-            :global VoipIp "{subnet_addresses[2]}.1/24"
-            :global VoipIpNetwork "{subnet_addresses[2]}.0"
-            :global VoipIpSubnet "{subnet_addresses[2]}.0/24"
-            :global PoolVoip "{subnet_addresses[2]}.99-{subnet_addresses[2]}.253"
+            :global VoipGWIp "{increment_last_octet(subnet_addresses[2], 1)}"
+            :global VoipIp "{increment_last_octet(subnet_addresses[2], 1)}/24"
+            :global VoipIpNetwork "{increment_last_octet(subnet_addresses[2], 0)}"
+            :global VoipIpSubnet "{increment_last_octet(subnet_addresses[2], 0)}/24"
+            :global PoolVoip "{increment_last_octet(subnet_addresses[2], 99)}-{increment_last_octet(subnet_addresses[2], 253)}"
 
-            :global SecurityGWIp "{subnet_addresses[3]}.1"
-            :global SecurityIp "{subnet_addresses[3]}.1/24"
-            :global SecurityIpNetwork "{subnet_addresses[3]}.0"
-            :global SecurityIpSubnet "{subnet_addresses[3]}.0/24"
-            :global PoolSecurity "{subnet_addresses[3]}.99-{subnet_addresses[3]}.253"
+            :global SecurityGWIp "{increment_last_octet(subnet_addresses[3], 1)}"
+            :global SecurityIp "{increment_last_octet(subnet_addresses[3], 1)}/24"
+            :global SecurityIpNetwork "{increment_last_octet(subnet_addresses[3], 0)}"
+            :global SecurityIpSubnet "{increment_last_octet(subnet_addresses[3], 0)}/24"
+            :global PoolSecurity "{increment_last_octet(subnet_addresses[3], 99)}-{increment_last_octet(subnet_addresses[3], 253)}"
 
-            :global GuestGWIp "{subnet_addresses[4]}.1"
-            :global GuestIp "{subnet_addresses[4]}.1/24"
-            :global GuestIpNetwork "{subnet_addresses[4]}.0"
-            :global GuestIpSubnet "{subnet_addresses[4]}.0/24"
-            :global PoolGuest "{subnet_addresses[4]}.99-{subnet_addresses[4]}.253"
+            :global GuestGWIp "{increment_last_octet(subnet_addresses[4], 1)}"
+            :global GuestIp "{increment_last_octet(subnet_addresses[4], 1)}/24"
+            :global GuestIpNetwork "{increment_last_octet(subnet_addresses[4], 0)}"
+            :global GuestIpSubnet "{increment_last_octet(subnet_addresses[4], 0)}/24"
+            :global PoolGuest "{increment_last_octet(subnet_addresses[4], 99)}-{increment_last_octet(subnet_addresses[4], 253)}"
             """
             office_site_template = '''
             ### reset to factory
