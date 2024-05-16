@@ -144,8 +144,8 @@ class CustomerSetupScript(Script):
             self.log_info(f"Infra prefix {'created' if created else 'retrieved'}: {infra_prefix.prefix}")
 
             password = generate_password(20)
-            script_template = f"""
-            
+            save_password_template = '''
+                        
             passbolt please save this
             ======
             uri: {data['local_vpn_ip']}:35300
@@ -155,6 +155,9 @@ class CustomerSetupScript(Script):
             Office mikrotik code to copy paste
             ======
             
+            '''
+
+            script_template = f"""
             :global NameDevice "{data['customer_short_name']}-{data['customer_office_place']}-Office"
             :global AdminPassword "{password}"
             :global DnsServers "8.8.8.8,8.8.4.4,1.1.1.1"
@@ -345,8 +348,7 @@ class CustomerSetupScript(Script):
             /ip dns static
             
             ### routes
-            /ip route add disabled=no dst-address=$CustomerCloudSubnet gateway=$OpenVPNServerInterfaceIP routing-table=\
-                main suppress-hw-offload=no
+            /ip route add disabled=no dst-address=$CustomerCloudSubnet gateway=$OpenVPNServerInterfaceIP routing-table=main suppress-hw-offload=no
             
             
             ### dns server settings
@@ -490,24 +492,21 @@ class CustomerSetupScript(Script):
             
             # Create openvpn 
             /ppp secret
-            add name=$OpenVPNCloudUsername password=$OpenVPNCloudPassword profile=$OpenVPNProfileName remote-address=\
-                $OpenVPNLocalIP routes=$OpenVPNOfficeSubnets service=ovpn
+            add name=$OpenVPNCloudUsername password=$OpenVPNCloudPassword profile=$OpenVPNProfileName remote-address=$OpenVPNLocalIP routes=$OpenVPNOfficeSubnets service=ovpn
             
             # firewall rule 
-            /ip firewall filter add action=accept chain=forward comment=$CustomerFirewallRuleComment connection-state=new \
-                dst-address-list=$CustomerAdresList in-interface-list=$CustomerInterfaceList out-interface-list=$CustomerInterfaceList \
-                src-address-list=$CustomerAdresList place-before=10
+            /ip firewall filter add action=accept chain=forward comment=$CustomerFirewallRuleComment connection-state=new dst-address-list=$CustomerAdresList in-interface-list=$CustomerInterfaceList out-interface-list=$CustomerInterfaceList src-address-list=$CustomerAdresList place-before=10
             '''
             # Add journal entries for the sites
             JournalEntry.objects.create(
                 assigned_object=office_site,
                 created_by=self.request.user,
-                comments=f'```\n{script_template} \n{office_site_template}\n```'
+                comments=f'```\n{save_password_template}\n{script_template}\n{office_site_template}\n```'
             )
             JournalEntry.objects.create(
                 assigned_object=cloud_site,
                 created_by=self.request.user,
-                comments=f'```\n{script_template} \n{cloud_site_template}\n```'
+                comments=f'```\n{script_template}\n{cloud_site_template}\n```'
             )
 
             self.log_success("Customer setup script completed successfully")
