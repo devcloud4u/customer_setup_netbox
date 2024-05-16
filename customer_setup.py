@@ -68,19 +68,20 @@ class CustomerSetupScript(Script):
 
             aligned_office_prefix_base = align_to_subnet(validated_subnet_base, 21)
             office_prefix_str = f"{aligned_office_prefix_base}/21"
-            office_prefix, created = Prefix.objects.get_or_create(prefix=office_prefix_str, site=office_site)
+            office_prefix, created = Prefix.objects.get_or_create(prefix=office_prefix_str, site=office_site, tenant=tenant)
             self.log_info(f"/21 prefix for office site {'created' if created else 'retrieved'}: {office_prefix.prefix}")
 
             cloud_vlan_id = int(data['customer_cloud_vlanid'])
             cloud_vlan_name = format_vlan_id(data['customer_cloud_vlanid'])
             cloud_vlan, created = VLAN.objects.get_or_create(vid=cloud_vlan_id,
                                                              name=f"{data['customer_short_name']} Cloud",
-                                                             site=cloud_site)
+                                                             site=cloud_site,
+                                                             tenant=tenant)
             self.log_info(f"Cloud VLAN {'created' if created else 'retrieved'}: {cloud_vlan.name}")
 
             cloud_prefix_str = f"10.0.{cloud_vlan_id}.0/24"
             cloud_prefix, created = Prefix.objects.get_or_create(prefix=cloud_prefix_str, site=cloud_site,
-                                                                 vlan=cloud_vlan)
+                                                                 vlan=cloud_vlan, tenant=tenant)
             self.log_info(f"Cloud prefix {'created' if created else 'retrieved'}: {cloud_prefix.prefix}")
 
             base_ip = aligned_office_prefix_base
@@ -94,15 +95,15 @@ class CustomerSetupScript(Script):
             ]
 
             for vid, name, subnet in vlans:
-                vlan, created = VLAN.objects.get_or_create(vid=vid, name=name, site=office_site)
+                vlan, created = VLAN.objects.get_or_create(vid=vid, name=name, site=office_site,tenant=tenant)
                 self.log_info(f"{name} VLAN {'created' if created else 'retrieved'}: {vlan.name}")
 
                 prefix_str = f"{subnet}/24"
-                prefix, created = Prefix.objects.get_or_create(prefix=prefix_str, site=office_site, vlan=vlan)
+                prefix, created = Prefix.objects.get_or_create(prefix=prefix_str, site=office_site, vlan=vlan, tenant=tenant)
                 self.log_info(f"{name} prefix {'created' if created else 'retrieved'}: {prefix.prefix}")
 
             infra_prefix_str = f"{subnet_addresses[0]}/24"
-            infra_prefix, created = Prefix.objects.get_or_create(prefix=infra_prefix_str, site=office_site)
+            infra_prefix, created = Prefix.objects.get_or_create(prefix=infra_prefix_str, site=office_site, tenant=tenant)
             self.log_info(f"Infra prefix {'created' if created else 'retrieved'}: {infra_prefix.prefix}")
 
             self.log_success("Customer setup script completed successfully")
