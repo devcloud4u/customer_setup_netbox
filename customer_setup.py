@@ -5,13 +5,13 @@ from dcim.models import Site
 from ipam.models import VLAN, Prefix
 from tenancy.models import Tenant
 from django.template.defaultfilters import slugify
-from netaddr import IPNetwork
+from netaddr import IPNetwork, IPAddress
 
 
-def increment_last_octet(ip_base, increment, subnet_mask):
+def increment_subnet(ip_base, increment, subnet_mask):
     network = IPNetwork(f"{ip_base}/{subnet_mask}")
-    new_ip = str(network.ip + increment)
-    return new_ip
+    new_network = network.next(increment)
+    return str(new_network.network)
 
 
 def format_vlan_id(vlan_id):
@@ -92,7 +92,7 @@ class CustomerSetupScript(Script):
 
             # Create additional VLANs and prefixes for office site
             base_ip = aligned_office_prefix_base
-            subnet_addresses = [increment_last_octet(base_ip, i, 24) for i in range(5)]
+            subnet_addresses = [increment_subnet(base_ip, i, 24) for i in range(5)]
 
             vlans = [
                 (20, "Office", subnet_addresses[1]),
@@ -105,12 +105,12 @@ class CustomerSetupScript(Script):
                 vlan, created = VLAN.objects.get_or_create(vid=vid, name=name, site=office_site)
                 self.log_info(f"{name} VLAN {'created' if created else 'retrieved'}: {vlan.name}")
 
-                prefix_str = f"{subnet}.0/24"
+                prefix_str = f"{subnet}/24"
                 prefix, created = Prefix.objects.get_or_create(prefix=prefix_str, site=office_site, vlan=vlan)
                 self.log_info(f"{name} prefix {'created' if created else 'retrieved'}: {prefix.prefix}")
 
             # Create /24 prefix for Infra IP
-            infra_prefix_str = f"{subnet_addresses[0]}.0/24"
+            infra_prefix_str = f"{subnet_addresses[0]}/24"
             infra_prefix, created = Prefix.objects.get_or_create(prefix=infra_prefix_str, site=office_site)
             self.log_info(f"Infra prefix {'created' if created else 'retrieved'}: {infra_prefix.prefix}")
 
