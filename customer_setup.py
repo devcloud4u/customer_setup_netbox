@@ -42,12 +42,12 @@ class CustomerSetupScript(Script):
         description = "Sets up tenant, sites, VLANs, and prefixes for a new customer"
         commit_default = True
 
-    customer_full_name = StringVar(description="Customer Full Name (e.g., 'Ali Transport')")
-    customer_short_name = StringVar(description="Customer Short Name (e.g., 'Ali')")
-    customer_office_place = StringVar(description="Customer Office Place (e.g., 'Istanbul')")
-    customer_cloud_vlanid = IntegerVar(description="Customer Cloud VLAN ID (e.g., '10')")
-    customer_21_subnet = StringVar(description="Customer /21 Subnet Base (e.g., '10.201.16')")
-    local_vpn_ip = StringVar(description="Local VPN IP (e.g., '10.200.110.38')")
+    customer_full_name = StringVar(description="Customer Full Name (e.g., 'Ali Transport')", default="Ali Transport")
+    customer_short_name = StringVar(description="Customer Short Name (e.g., 'Ali')", default="Ali")
+    customer_office_place = StringVar(description="Customer Office Place (e.g., 'Istanbul')", default="Istanbul")
+    customer_cloud_vlanid = IntegerVar(description="Customer Cloud VLAN ID (e.g., '10')", default=10)
+    customer_21_subnet = StringVar(description="Customer /21 Subnet Base (e.g., '10.201.16')", default="10.201.16")
+    local_vpn_ip = StringVar(description="Local VPN IP (e.g., '10.200.110.38')", default="10.200.110.38")
 
     def run(self, data, commit):
         try:
