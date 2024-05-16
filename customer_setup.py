@@ -22,7 +22,7 @@ def format_vlan_id(vlan_id):
     vlan_number = int(vlan_id)
     if vlan_number > 254:
         raise ValueError("VLAN can be a maximum of 254. Please enter a VLAN less than 254.")
-    return str(vlan_id).zfill(4)
+    return str(vlan_number).zfill(4)
 
 
 def align_to_subnet(ip_base, mask):
@@ -82,13 +82,14 @@ class CustomerSetupScript(Script):
             self.log_info(f"/21 prefix for office site {'created' if created else 'retrieved'}: {office_prefix.prefix}")
 
             # Create VLAN and prefix for cloud site
-            cloud_vlan_id = format_vlan_id(data['customer_cloud_vlanid'])
-            cloud_vlan, created = VLAN.objects.get_or_create(vid=int(cloud_vlan_id),
+            cloud_vlan_id = int(data['customer_cloud_vlanid'])  # Ensure it's an integer for IP address
+            cloud_vlan_name = format_vlan_id(data['customer_cloud_vlanid'])  # Use zfilled for display
+            cloud_vlan, created = VLAN.objects.get_or_create(vid=cloud_vlan_id,
                                                              name=f"{data['customer_short_name']} Cloud",
                                                              site=cloud_site)
             self.log_info(f"Cloud VLAN {'created' if created else 'retrieved'}: {cloud_vlan.name}")
 
-            cloud_prefix_str = f"10.0.{cloud_vlan_id}.0/24"
+            cloud_prefix_str = f"10.0.{cloud_vlan_id}.0/24"  # Use integer directly for IP address
             cloud_prefix, created = Prefix.objects.get_or_create(prefix=cloud_prefix_str, site=cloud_site,
                                                                  vlan=cloud_vlan)
             self.log_info(f"Cloud prefix {'created' if created else 'retrieved'}: {cloud_prefix.prefix}")
