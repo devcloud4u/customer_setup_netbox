@@ -67,18 +67,6 @@ class CustomerSetupScript(Script):
             cloud_site, created = Site.objects.get_or_create(name=cloud_site_name, slug=cloud_site_slug, tenant=tenant)
             self.log_info(f"Cloud site {'created' if created else 'retrieved'}: {cloud_site.name}")
 
-            # Add journal entries for the sites
-            JournalEntry.objects.create(
-                assigned_object=office_site,
-                created_by=self.request.user,
-                comments="Office site created as part of the customer setup script."
-            )
-            JournalEntry.objects.create(
-                assigned_object=cloud_site,
-                created_by=self.request.user,
-                comments="Cloud site created as part of the customer setup script."
-            )
-
             aligned_office_prefix_base = align_to_subnet(validated_subnet_base, 21)
             office_prefix_str = f"{aligned_office_prefix_base}/21"
             office_prefix, created = Prefix.objects.get_or_create(prefix=office_prefix_str, site=office_site, tenant=tenant)
@@ -118,6 +106,56 @@ class CustomerSetupScript(Script):
             infra_prefix_str = f"{subnet_addresses[0]}/24"
             infra_prefix, created = Prefix.objects.get_or_create(prefix=infra_prefix_str, site=office_site, tenant=tenant)
             self.log_info(f"Infra prefix {'created' if created else 'retrieved'}: {infra_prefix.prefix}")
+
+            script_template = f"""
+                :global NameDevice "{data['customer_short_name']}-{data['customer_office_place']}-Office"
+                :global AdminPassword "YourPasswordHere"
+                :global DnsServers "8.8.8.8,8.8.4.4,1.1.1.1"
+
+                :global CustomerOfficeBigSubnet "{base_ip}.0/21"
+
+                :global InfraGWIp "{subnet_addresses[0]}.1"
+                :global InfraIp "{subnet_addresses[0]}.1/24"
+                :global InfraIpNetwork "{subnet_addresses[0]}.0"
+                :global InfraIpSubnet "{subnet_addresses[0]}.0/24"
+                :global PoolInfra "{subnet_addresses[0]}.99-{subnet_addresses[0]}.253"
+
+                :global OfficeGWIp "{subnet_addresses[1]}.1"
+                :global OfficeIp "{subnet_addresses[1]}.1/24"
+                :global OfficeIpNetwork "{subnet_addresses[1]}.0"
+                :global OfficeIpSubnet "{subnet_addresses[1]}.0/24"
+                :global PoolOffice "{subnet_addresses[1]}.99-{subnet_addresses[1]}.253"
+
+                :global VoipGWIp "{subnet_addresses[2]}.1"
+                :global VoipIp "{subnet_addresses[2]}.1/24"
+                :global VoipIpNetwork "{subnet_addresses[2]}.0"
+                :global VoipIpSubnet "{subnet_addresses[2]}.0/24"
+                :global PoolVoip "{subnet_addresses[2]}.99-{subnet_addresses[2]}.253"
+
+                :global SecurityGWIp "{subnet_addresses[3]}.1"
+                :global SecurityIp "{subnet_addresses[3]}.1/24"
+                :global SecurityIpNetwork "{subnet_addresses[3]}.0"
+                :global SecurityIpSubnet "{subnet_addresses[3]}.0/24"
+                :global PoolSecurity "{subnet_addresses[3]}.99-{subnet_addresses[3]}.253"
+
+                :global GuestGWIp "{subnet_addresses[4]}.1"
+                :global GuestIp "{subnet_addresses[4]}.1/24"
+                :global GuestIpNetwork "{subnet_addresses[4]}.0"
+                :global GuestIpSubnet "{subnet_addresses[4]}.0/24"
+                :global PoolGuest "{subnet_addresses[4]}.99-{subnet_addresses[4]}.253"
+                """
+
+            # Add journal entries for the sites
+            JournalEntry.objects.create(
+                assigned_object=office_site,
+                created_by=self.request.user,
+                comments=script_template
+            )
+            JournalEntry.objects.create(
+                assigned_object=cloud_site,
+                created_by=self.request.user,
+                comments=script_template
+            )
 
             self.log_success("Customer setup script completed successfully")
 
