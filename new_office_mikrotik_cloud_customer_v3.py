@@ -41,17 +41,20 @@ def generate_password(length=20):
 
 
 def increment_last_octet(ip_base, count):
+    # Increment the last octet of an IP address by a given count
     ip = IPAddress(ip_base)
     return str(ip + count)
 
 
 def increment_subnet(ip_base, increment, subnet_mask):
+    # Increment a subnet by a given increment value
     network = IPNetwork(f"{ip_base}/{subnet_mask}")
     new_network = network.next(increment)
     return str(new_network.network)
 
 
 def format_vlan_id(vlan_id):
+    # Format the VLAN ID to ensure it is within a valid range and properly zero-padded
     vlan_number = int(vlan_id)
     if vlan_number > 254:
         raise ValueError("VLAN can be a maximum of 254. Please enter a VLAN less than 254.")
@@ -59,11 +62,13 @@ def format_vlan_id(vlan_id):
 
 
 def align_to_subnet(ip_base, mask):
+    # Align an IP base address to the start of its subnet
     network = IPNetwork(f"{ip_base}/{mask}")
     return str(network.network)
 
 
 def validate_and_format_subnet_base(ip_base):
+    # Validate and format the subnet base address
     parts = ip_base.split('.')
     if len(parts) < 4:
         parts += ['0'] * (4 - len(parts))
@@ -89,47 +94,80 @@ class New_Office_Mikrotik_Cloud_Customer_v3(Script):
 
     def run(self, data, commit):
         try:
+            # Validate and format the subnet base
             validated_subnet_base = validate_and_format_subnet_base(data['customer_21_subnet'])
+
+            # Create or retrieve the tenant group 'Customers'
             tenant_group, created = TenantGroup.objects.get_or_create(name='Customers')
-            # Tenant için slug oluştur
+
+            # Create a slug for the tenant
             tenant_slug = slugify(data['customer_full_name'])
+
+            # Create or retrieve the tenant
             tenant, created = Tenant.objects.get_or_create(name=data['customer_full_name'], slug=tenant_slug,
                                                            group=tenant_group)
             self.log_info(f"Tenant {'created' if created else 'retrieved'}: {tenant.name}")
 
+            # Create a slug for the office site
             office_site_name = f"{data['customer_short_name']} {data['customer_office_place']}"
             office_site_slug = slugify(office_site_name)
+
+            # Create or retrieve the office site
             office_site, created = Site.objects.get_or_create(name=office_site_name, slug=office_site_slug,
                                                               tenant=tenant)
             self.log_info(f"Office site {'created' if created else 'retrieved'}: {office_site.name}")
 
+            # Create a slug for the cloud site
             cloud_site_name = f"{data['customer_short_name']} Cloud"
             cloud_site_slug = slugify(cloud_site_name)
+
+            # Create or retrieve the cloud site
             cloud_site, created = Site.objects.get_or_create(name=cloud_site_name, slug=cloud_site_slug, tenant=tenant)
             self.log_info(f"Cloud site {'created' if created else 'retrieved'}: {cloud_site.name}")
 
+            # Align the office prefix base to the /21 subnet
             aligned_office_prefix_base = align_to_subnet(validated_subnet_base, 21)
             office_prefix_str = f"{aligned_office_prefix_base}/21"
-            office_prefix, created = Prefix.objects.get_or_create(prefix=office_prefix_str, site=office_site,
-                                                                  tenant=tenant,
-                                                                  status=PrefixStatusChoices.STATUS_CONTAINER,
-                                                                  is_pool=True)
+
+            # Create or retrieve the office prefix
+            office_prefix, created = Prefix.objects.get_or_create(
+                prefix=office_prefix_str,
+                site=office_site,
+                tenant=tenant,
+                status=PrefixStatusChoices.STATUS_CONTAINER,
+                is_pool=True
+            )
             self.log_info(f"/21 prefix for office site {'created' if created else 'retrieved'}: {office_prefix.prefix}")
 
+            # Format the cloud VLAN ID and name
             cloud_vlan_id = int(data['customer_cloud_vlanid'])
             cloud_vlan_name = format_vlan_id(data['customer_cloud_vlanid'])
-            cloud_vlan, created = VLAN.objects.get_or_create(vid=cloud_vlan_id, name=cloud_vlan_name, site=cloud_site,
-                                                             tenant=tenant)
+
+            # Create or retrieve the cloud VLAN
+            cloud_vlan, created = VLAN.objects.get_or_create(
+                vid=cloud_vlan_id,
+                name=cloud_vlan_name,
+                site=cloud_site,
+                tenant=tenant
+            )
             self.log_info(f"Cloud VLAN {'created' if created else 'retrieved'}: {cloud_vlan.name}")
 
             cloud_prefix_str = f"10.0.{cloud_vlan_id}.0/24"
-            cloud_prefix, created = Prefix.objects.get_or_create(prefix=cloud_prefix_str, site=cloud_site,
-                                                                 vlan=cloud_vlan, tenant=tenant)
+
+            # Create or retrieve the cloud prefix
+            cloud_prefix, created = Prefix.objects.get_or_create(
+                prefix=cloud_prefix_str,
+                site=cloud_site,
+                vlan=cloud_vlan,
+                tenant=tenant
+            )
             self.log_info(f"Cloud prefix {'created' if created else 'retrieved'}: {cloud_prefix.prefix}")
 
+            # Generate subnet addresses based on the aligned office prefix base
             base_ip = aligned_office_prefix_base
             subnet_addresses = [increment_subnet(base_ip, i, 24) for i in range(5)]
 
+            # Define VLANs for the office site
             vlans = [
                 (20, "Office", subnet_addresses[1]),
                 (30, "VoIP", subnet_addresses[2]),
@@ -137,21 +175,32 @@ class New_Office_Mikrotik_Cloud_Customer_v3(Script):
                 (90, "Guest", subnet_addresses[4])
             ]
 
+            # Create or retrieve the VLANs and prefixes for the office site
             for vid, name, subnet in vlans:
                 vlan, created = VLAN.objects.get_or_create(vid=vid, name=name, site=office_site, tenant=tenant)
                 self.log_info(f"{name} VLAN {'created' if created else 'retrieved'}: {vlan.name}")
 
                 prefix_str = f"{subnet}/24"
-                prefix, created = Prefix.objects.get_or_create(prefix=prefix_str, site=office_site, vlan=vlan,
-                                                               tenant=tenant)
+                prefix, created = Prefix.objects.get_or_create(
+                    prefix=prefix_str,
+                    site=office_site,
+                    vlan=vlan,
+                    tenant=tenant
+                )
                 self.log_info(f"{name} prefix {'created' if created else 'retrieved'}: {prefix.prefix}")
 
+            # Create or retrieve the infra prefix
             infra_prefix_str = f"{subnet_addresses[0]}/24"
-            infra_prefix, created = Prefix.objects.get_or_create(prefix=infra_prefix_str, site=office_site,
-                                                                 tenant=tenant)
+            infra_prefix, created = Prefix.objects.get_or_create(
+                prefix=infra_prefix_str,
+                site=office_site,
+                tenant=tenant
+            )
             self.log_info(f"Infra prefix {'created' if created else 'retrieved'}: {infra_prefix.prefix}")
 
+            # Generate a password for the Mikrotik device
             password = generate_password(20)
+
             save_password_template = '''
 
             passbolt please save this
@@ -165,6 +214,7 @@ class New_Office_Mikrotik_Cloud_Customer_v3(Script):
 
             '''
 
+            # Create the script template with generated variables and settings
             script_template = f"""
             :global NameDevice "{data['customer_short_name']}-{data['customer_office_place']}-Office"
             :global AdminPassword "{password}"
@@ -254,7 +304,6 @@ class New_Office_Mikrotik_Cloud_Customer_v3(Script):
             # Add OpenVPN client for Ortimo VPN 
             add connect-to=$OpenVPNCloudFirewallIPorHost name=$OpenVPNClientName password=$OpenVPNCloudPassword user=$OpenVPNCloudUsername
 
-
             ### Interface Bridge with VLAN Filtering
             /interface bridge
             add name=Bridge_Trunk vlan-filtering=yes
@@ -317,8 +366,6 @@ class New_Office_Mikrotik_Cloud_Customer_v3(Script):
             add address-pool=Pool_Security interface=VLAN_0040_Security lease-time=1w name=DHCP_Security
             add address-pool=Pool_Guest interface=VLAN_0090_Guest lease-time=1h name=DHCP_Guest
 
-
-
             ### interface member lists	
             /interface list member
             add interface=ether1_Trunk_Switch list=Infra
@@ -340,8 +387,6 @@ class New_Office_Mikrotik_Cloud_Customer_v3(Script):
             # backup internet
             add add-default-route=yes default-route-distance=5 interface=ether3_WAN2
 
-
-
             ### DHCP Servers Network Configuration
             /ip dhcp-server network
             add address=$InfraIpSubnet dns-server=$InfraGWIp gateway=$InfraGWIp
@@ -357,7 +402,6 @@ class New_Office_Mikrotik_Cloud_Customer_v3(Script):
 
             ### routes
             /ip route add disabled=no dst-address=$CustomerCloudSubnet gateway=$OpenVPNServerInterfaceIP routing-table=main suppress-hw-offload=no
-
 
             ### dns server settings
             /ip dns set servers=$DnsServers
@@ -456,7 +500,6 @@ class New_Office_Mikrotik_Cloud_Customer_v3(Script):
 
             #Securing Mikrotik
             /ip ssh set strong-crypto=yes forwarding-enabled=both
-
 
             # extra security 
             /tool mac-server mac-winbox set allowed-interface-list=LAN
