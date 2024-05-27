@@ -413,8 +413,8 @@ class New_Office_Mikrotik_Cloud_Customer_v3(Script):
 
             ### IP firewall setup
             /ip firewall filter
-            # Allow traffic from OpenVPN_Ortimo VPN to LAN
-            add action=accept chain=forward connection-state=new,established,related in-interface=OpenVPN_Ortimo out-interface-list=LAN comment="Allow from Ortimo to LAN"
+            # Allow traffic from OpenVPN_Cloud VPN to LAN
+            add action=accept chain=forward connection-state=new,established,related in-interface=OpenVPN_Cloud out-interface-list=LAN comment="Allow from Ortimo to LAN"
             # FastTrack established and related connections for high-throughput
             add action=fasttrack-connection chain=forward connection-state=established,related hw-offload=yes comment="FastTrack for established and related connections"
             # Accept established and related connections
