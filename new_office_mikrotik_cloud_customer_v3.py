@@ -1,4 +1,6 @@
 # script version = 3
+## reset code
+## /system reset-configuration no-defaults=yes run-after-reset=flash/save.rsc
 
 import random
 
@@ -519,7 +521,7 @@ class New_Office_Mikrotik_Cloud_Customer_v3(Script):
             '''
 
             cloud_site_template = '''
-            # Create vlan for customer subnet
+            # Create vlan for customer subnet (Cloud vLan Interface)
             /interface vlan add interface=ether1-Trunk loop-protect=on name=$ClientVLanInterfaceName vlan-id=$ClientVLanID
 
             # interface list
