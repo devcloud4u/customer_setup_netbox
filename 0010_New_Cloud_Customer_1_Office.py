@@ -1,4 +1,4 @@
-# script version = 3 
+# script version = 3
 ## reset code
 ## /system reset-configuration no-defaults=yes run-after-reset=flash/save.rsc
 ## extra info https://github.com/AlexDerugo/backup_mikrotik_from_netbox/blob/main/routers-backup.py
@@ -205,8 +205,7 @@ class New_Office_Mikrotik_Cloud_Customer_v3(Script):
             # Generate a password for the Mikrotik device
             password = generate_password(20)
 
-            save_password_template = '''
-
+            save_password_template = f"""
             passbolt please save this
             ======
             uri: {data['local_vpn_ip']}:35300
@@ -215,8 +214,9 @@ class New_Office_Mikrotik_Cloud_Customer_v3(Script):
 
             Office mikrotik code to copy paste
             ======
-
-            '''
+            
+            """
+            
 
             # Create the script template with generated variables and settings
             script_template = f"""
