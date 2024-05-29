@@ -1,6 +1,7 @@
 # script version = 3
 ## reset code
 ## /system reset-configuration no-defaults=yes run-after-reset=flash/save.rsc
+## extra info https://github.com/AlexDerugo/backup_mikrotik_from_netbox/blob/main/routers-backup.py
 
 import random
 
