@@ -83,7 +83,7 @@ def validate_and_format_subnet_base(ip_base):
     return '.'.join(parts)
 
 
-class New_Office_Mikrotik_Cloud_Customer_v3(Script):
+class S0010_New_Cloud_Customer_1_Office(Script):
     class Meta:
         name = "New Office Mikrotik Cloud Customer v3"
         description = "Sets up tenant, sites, VLANs, and prefixes for a new customer"
@@ -570,4 +570,4 @@ class New_Office_Mikrotik_Cloud_Customer_v3(Script):
             self.log_failure(str(e))
 
 
-script = New_Office_Mikrotik_Cloud_Customer_v3
+script = S0010_New_Cloud_Customer_1_Office
