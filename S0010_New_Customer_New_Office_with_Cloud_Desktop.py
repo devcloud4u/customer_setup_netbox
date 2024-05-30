@@ -101,26 +101,24 @@ class S0010_New_Customer_New_Office_with_Cloud_Desktop(Script):
     local_vpn_ip = StringVar(description="Local VPN IP (e.g., '10.200.110.38')", default="10.200.110.38")
 
     def fetch_available_21_subnet(self):
-        # Search for available /21 subnet within /13 subnets
         available_21_subnet = None
         prefixes = Prefix.objects.filter(
             prefix__net_mask_length=13,
             status=PrefixStatusChoices.STATUS_CONTAINER,
             role__name="Customer Office"
-        ).exclude(utilization__gte=100)
+        )
 
         for prefix in prefixes:
             child_prefixes = prefix.get_child_prefixes()
-            available_21_prefixes = child_prefixes.filter(prefix__net_mask_length=21, utilization__lt=100)
-            if available_21_prefixes.exists():
-                available_21_subnet = available_21_prefixes.first().prefix
+            available_21_prefixes = [p for p in child_prefixes if p.prefix.prefixlen == 21 and not p.mark_utilized]
+            if available_21_prefixes:
+                available_21_subnet = available_21_prefixes[0].prefix
                 break
 
         return available_21_subnet
 
     def run(self, data, commit):
         try:
-            # Fetch available /21 subnet if not provided by user
             if not data['customer_21_subnet']:
                 available_21_subnet = self.fetch_available_21_subnet()
                 if available_21_subnet:
