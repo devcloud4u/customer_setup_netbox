@@ -118,6 +118,20 @@ class S0010_New_Customer_New_Office_with_Cloud_Desktop(Script):
 
         return available_21_subnet
 
+    def validate_and_format_subnet_base(ip_base):
+        # Strip the subnet mask if present
+        if '/' in ip_base:
+            ip_base = ip_base.split('/')[0]
+
+        parts = ip_base.split('.')
+        if len(parts) < 4:
+            parts += ['0'] * (4 - len(parts))
+        if len(parts) != 4:
+            raise ValueError("Invalid subnet base. Please provide a base in the format X.X.X.0")
+        if int(parts[-1]) != 0:
+            raise ValueError("The last octet of the subnet base should be 0 (e.g., '10.201.16.0')")
+        return '.'.join(parts)
+
     def run(self, data, commit):
         try:
             # Fetch available /21 subnet if not provided by user
