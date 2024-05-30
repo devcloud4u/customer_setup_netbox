@@ -113,7 +113,7 @@ class S0010_New_Customer_New_Office_with_Cloud_Desktop(Script):
             available_21_prefixes = [p for p in child_prefixes if p.prefix.prefixlen == 21 and not p.mark_utilized]
             if available_21_prefixes:
                 available_21_subnet = available_21_prefixes[0].prefix
-                print(f"Found available /21 subnet: {available_21_subnet}")
+                self.log_info(f"Found available /21 subnet: {available_21_subnet}")
                 break
 
         return available_21_subnet
@@ -124,14 +124,14 @@ class S0010_New_Customer_New_Office_with_Cloud_Desktop(Script):
             if not data['customer_21_subnet']:
                 available_21_subnet = self.fetch_available_21_subnet()
                 if available_21_subnet:
-                    print(f"Setting customer_21_subnet to: {available_21_subnet}")
+                    self.log_info(f"Setting customer_21_subnet to: {available_21_subnet}")
                     data['customer_21_subnet'] = str(available_21_subnet)
                 else:
                     raise ValueError("No available /21 subnet found within /13 subnets")
 
-            print(f"Customer /21 Subnet: {data['customer_21_subnet']}")
+            self.log_info(f"Customer /21 Subnet: {data['customer_21_subnet']}")
             validated_subnet_base = validate_and_format_subnet_base(data['customer_21_subnet'])
-            print(f"Validated Subnet Base: {validated_subnet_base}")
+            self.log_info(f"Validated Subnet Base: {validated_subnet_base}")
 
             tenant_group, created = TenantGroup.objects.get_or_create(name='Customers')
             tenant_slug = slugify(data['customer_full_name'])
@@ -152,7 +152,7 @@ class S0010_New_Customer_New_Office_with_Cloud_Desktop(Script):
 
             aligned_office_prefix_base = align_to_subnet(validated_subnet_base, 21)
             office_prefix_str = f"{aligned_office_prefix_base}/21"
-            print(f"Office Prefix: {office_prefix_str}")
+            self.log_info(f"Office Prefix: {office_prefix_str}")
             office_prefix, created = Prefix.objects.get_or_create(
                 prefix=office_prefix_str,
                 site=office_site,
@@ -173,7 +173,7 @@ class S0010_New_Customer_New_Office_with_Cloud_Desktop(Script):
             self.log_info(f"Cloud VLAN {'created' if created else 'retrieved'}: {cloud_vlan.name}")
 
             cloud_prefix_str = f"10.0.{cloud_vlan_id}.0/24"
-            print(f"Cloud Prefix: {cloud_prefix_str}")
+            self.log_info(f"Cloud Prefix: {cloud_prefix_str}")
             cloud_prefix, created = Prefix.objects.get_or_create(
                 prefix=cloud_prefix_str,
                 site=cloud_site,
@@ -184,7 +184,7 @@ class S0010_New_Customer_New_Office_with_Cloud_Desktop(Script):
 
             base_ip = aligned_office_prefix_base
             subnet_addresses = [increment_subnet(base_ip, i, 24) for i in range(5)]
-            print(f"Subnet Addresses: {subnet_addresses}")
+            self.log_info(f"Subnet Addresses: {subnet_addresses}")
 
             vlans = [
                 (20, "Office", subnet_addresses[1]),
@@ -198,7 +198,7 @@ class S0010_New_Customer_New_Office_with_Cloud_Desktop(Script):
                 self.log_info(f"{name} VLAN {'created' if created else 'retrieved'}: {vlan.name}")
 
                 prefix_str = f"{subnet}/24"
-                print(f"{name} Prefix: {prefix_str}")
+                self.log_info(f"{name} Prefix: {prefix_str}")
                 prefix, created = Prefix.objects.get_or_create(
                     prefix=prefix_str,
                     site=office_site,
@@ -208,7 +208,7 @@ class S0010_New_Customer_New_Office_with_Cloud_Desktop(Script):
                 self.log_info(f"{name} prefix {'created' if created else 'retrieved'}: {prefix.prefix}")
 
             infra_prefix_str = f"{subnet_addresses[0]}/24"
-            print(f"Infra Prefix: {infra_prefix_str}")
+            self.log_info(f"Infra Prefix: {infra_prefix_str}")
             infra_prefix, created = Prefix.objects.get_or_create(
                 prefix=infra_prefix_str,
                 site=office_site,
