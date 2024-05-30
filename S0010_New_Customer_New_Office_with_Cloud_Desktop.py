@@ -112,13 +112,14 @@ class S0010_New_Customer_New_Office_with_Cloud_Desktop(Script):
             child_prefixes = prefix.get_child_prefixes()
             available_21_prefixes = [p for p in child_prefixes if p.prefix.prefixlen == 21 and not p.mark_utilized]
             if available_21_prefixes:
-                available_21_subnet = available_21_prefixes[0].prefix
+                available_21_subnet = available_21_prefixes[0].network
                 break
 
         return available_21_subnet
 
     def run(self, data, commit):
         try:
+            # Fetch available /21 subnet if not provided by user
             if not data['customer_21_subnet']:
                 available_21_subnet = self.fetch_available_21_subnet()
                 if available_21_subnet:
