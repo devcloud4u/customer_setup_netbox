@@ -3,6 +3,25 @@
 ## /system reset-configuration no-defaults=yes run-after-reset=flash/save.rsc
 ## extra info https://github.com/AlexDerugo/backup_mikrotik_from_netbox/blob/main/routers-backup.py
 
+
+#### Fill the form
+# Customer Full name = Tenant name ** slugs outomaticsh 
+# Customer Short Name =  1 word of customer without space
+# Customer Office Place = Site name  ( 1 word without space)
+# Customer Cloud vLan id = Get form vcenter manualy (user should get and enter)
+# Customer 21 subnet = Get automaticaly form netbox and show (user can edit) (give also a link to prefix with new tab open option)
+    # Search in prefixes /13 subnets with UTILIZATION status != 100% and role = "Customer Office" and status = Container (if this If this is too difficult let me know, there is another way in my mind that is much simpler. but this way is more automatic.)
+    # in this /13 subnet check avaible child prefixes minimum availble prefix /21 
+# Cloud Mikrotik ip
+    #   Get a list of ip addresses Filter ( Get all ip addresses with ip Role = CARP)
+    #   use this in vairable :global OpenVPNCloudFirewallIPorHost "95.211.35.162"  (without /subnet)
+# OpenVPN ip
+    # get list of ip's filter ( )
+    # set Tenant Group = Customers   and Tenant = Customer tenant
+
+#### steps
+
+
 import random
 
 from extras.scripts import Script, StringVar, IntegerVar
