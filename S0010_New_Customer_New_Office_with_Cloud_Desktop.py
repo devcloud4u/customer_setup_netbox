@@ -112,7 +112,7 @@ class S0010_New_Customer_New_Office_with_Cloud_Desktop(Script):
             child_prefixes = prefix.get_child_prefixes()
             available_21_prefixes = [p for p in child_prefixes if p.prefix.prefixlen == 21 and not p.mark_utilized]
             if available_21_prefixes:
-                available_21_subnet = available_21_prefixes[0].network
+                available_21_subnet = available_21_prefixes[0].prefix
                 break
 
         return available_21_subnet
