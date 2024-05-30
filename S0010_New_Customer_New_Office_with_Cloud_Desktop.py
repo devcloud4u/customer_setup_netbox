@@ -104,14 +104,14 @@ class S0010_New_Customer_New_Office_with_Cloud_Desktop(Script):
         # Search for available /21 subnet within /13 subnets
         available_21_subnet = None
         prefixes = Prefix.objects.filter(
-            prefix__netmask=13,
+            prefix__net_mask_length=13,
             status=PrefixStatusChoices.STATUS_CONTAINER,
             role__name="Customer Office"
         ).exclude(utilization__gte=100)
 
         for prefix in prefixes:
             child_prefixes = prefix.get_child_prefixes()
-            available_21_prefixes = child_prefixes.filter(prefix__netmask=21, utilization__lt=100)
+            available_21_prefixes = child_prefixes.filter(prefix__net_mask_length=21, utilization__lt=100)
             if available_21_prefixes.exists():
                 available_21_subnet = available_21_prefixes.first().prefix
                 break
