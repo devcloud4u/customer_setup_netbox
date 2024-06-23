@@ -468,6 +468,7 @@ class S0010_New_Customer_New_Office_with_Cloud_Desktop(Script):
                 add action=accept chain=forward connection-state=new in-interface-list=Office out-interface-list=Office comment="Allow Office to Office communication"
                 add action=accept chain=forward connection-state=new in-interface-list=Security out-interface-list=Security comment="Allow Security to Security communication"
                 add action=accept chain=forward connection-state=new in-interface-list=VoIP out-interface-list=VoIP comment="Allow VoIP to VoIP communication"
+                add action=accept chain=forward connection-state=new in-interface-list=LAN out-interface-list=Cloud comment="Allow From Lan to Cloud communication"
                 # Allow ICMP on input chain
                 add action=accept chain=input protocol=icmp comment="Allow ICMP ping"
                 # Drop all other incoming connections on WAN interface
