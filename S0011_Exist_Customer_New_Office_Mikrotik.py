@@ -236,7 +236,7 @@ Office mikrotik code to copy paste
 :global CustomerOfficeBigSubnet "{base_ip}/21"
 :global OpenVPNLocalIP "{data['local_vpn_ip']}"
 :global OpenVPNCloudUsername "{customer_short_name}-{data['customer_office_place']}-Office"
-:global OpenVPNCloudPassword {openvpn_password}
+:global OpenVPNCloudPassword "{openvpn_password}"
 
 # static variables
 :global OpenVPNProfileName "OpenVPN_Profile"
