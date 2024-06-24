@@ -38,13 +38,15 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
 
     tenant = ObjectVar(
         model=Tenant,
-        label="Select Tenant",
+        label="Select Customer Tenant",
+        description="New Office Site will be created below this Tenant",
         required=True
     )
 
     site = ObjectVar(
         model=Site,
-        label="Select Site",
+        label="Select Customer Cloud Site",
+        description="Cloud Mikrotik Config will be pushed on this site",
         required=True,
         query_params={
             'tenant_id': '$tenant'
