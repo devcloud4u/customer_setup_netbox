@@ -441,42 +441,42 @@ class S0010_New_Customer_New_Office_with_Cloud_Desktop(Script):
                 /ip firewall address-list
                 add list=AdminAccess address=$ServiceSubnet
 
-                ### IP firewall setup
-                /ip firewall filter
-                # Allow traffic from OpenVPN_Cloud VPN to LAN
-                add action=accept chain=forward connection-state=new,established,related in-interface=OpenVPN_Cloud out-interface-list=LAN comment="Allow from Ortimo to LAN"
-                # FastTrack established and related connections for high-throughput
-                add action=fasttrack-connection chain=forward connection-state=established,related hw-offload=yes comment="FastTrack for established and related connections"
-                # Accept established and related connections
-                add action=accept chain=forward connection-state=established,related comment="Accept established and related connections"
-                # Accept established and related connections on input chain
-                add action=accept chain=input connection-state=established,related comment="Accept established and related connections on input"
-                # Allow Winbox access
-                add action=accept chain=input connection-state=new dst-port=35300 protocol=tcp comment="Allow Winbox access"
-                /ip firewall filter
-                # Allow SSH access from AdminAccess list
-                add action=accept chain=input connection-state=new dst-port=2220 protocol=tcp src-address-list=AdminAccess comment="Allow SSH from AdminAccess list"
-                # Allow WebFig access from AdminAccess list
-                add action=accept chain=input connection-state=new dst-port=8181 protocol=tcp src-address-list=AdminAccess comment="Allow WebFig from AdminAccess list"
-                # Allow LAN to access the internet
-                add action=accept chain=forward in-interface-list=LAN out-interface-list=WAN comment="Allow internet access from LAN"
-                # Allow Cloud network to access LAN
-                add action=accept chain=forward in-interface-list=Cloud out-interface-list=LAN comment="Allow access from Cloud to LAN"
-                # Inter-VLAN routing rules
-                add action=accept chain=forward connection-state=new in-interface-list=Guest out-interface-list=Guest comment="Allow Guest to Guest communication"
-                add action=accept chain=forward connection-state=new in-interface-list=Infra out-interface-list=Infra comment="Allow Infra to Infra communication"
-                add action=accept chain=forward connection-state=new in-interface-list=Office out-interface-list=Office comment="Allow Office to Office communication"
-                add action=accept chain=forward connection-state=new in-interface-list=Security out-interface-list=Security comment="Allow Security to Security communication"
-                add action=accept chain=forward connection-state=new in-interface-list=VoIP out-interface-list=VoIP comment="Allow VoIP to VoIP communication"
-                add action=accept chain=forward connection-state=new in-interface-list=LAN out-interface-list=Cloud comment="Allow From Lan to Cloud communication"
-                # Allow ICMP on input chain
-                add action=accept chain=input protocol=icmp comment="Allow ICMP ping"
-                # Drop all other incoming connections on WAN interface
-                add action=drop chain=input in-interface-list=WAN comment="Drop all other incoming connections on WAN"
-                # Drop invalid and non-DSTNAT forwarded traffic from WAN
-                add action=drop chain=forward connection-nat-state=!dstnat out-interface-list=!WAN comment="Drop invalid and non-DSTNAT forward from WAN"
-                add action=drop chain=forward connection-nat-state=!dstnat connection-state=new in-interface-list=WAN comment="Drop new non-DSTNAT forward from WAN"
-                add action=drop chain=forward connection-state=invalid in-interface-list=WAN comment="Drop invalid forward from WAN"
+            ### IP firewall setup
+            /ip firewall filter
+            # Allow traffic from OpenVPN_Cloud VPN to LAN
+            add action=accept chain=forward connection-state=new,established,related in-interface=OpenVPN_Cloud out-interface-list=LAN comment="Allow from Ortimo to LAN"
+            # FastTrack established and related connections for high-throughput
+            add action=fasttrack-connection chain=forward connection-state=established,related hw-offload=yes comment="FastTrack for established and related connections"
+            # Accept established and related connections
+            add action=accept chain=forward connection-state=established,related comment="Accept established and related connections"
+            # Accept established and related connections on input chain
+            add action=accept chain=input connection-state=established,related comment="Accept established and related connections on input"
+            # Allow Winbox access
+            add action=accept chain=input connection-state=new dst-port=35300 protocol=tcp comment="Allow Winbox access"
+            /ip firewall filter
+            # Allow SSH access from AdminAccess list
+            add action=accept chain=input connection-state=new dst-port=2220 protocol=tcp src-address-list=AdminAccess comment="Allow SSH from AdminAccess list"
+            # Allow WebFig access from AdminAccess list
+            add action=accept chain=input connection-state=new dst-port=8181 protocol=tcp src-address-list=AdminAccess comment="Allow WebFig from AdminAccess list"
+            # Allow LAN to access the internet
+            add action=accept chain=forward in-interface-list=LAN out-interface-list=WAN comment="Allow internet access from LAN"
+            # Allow Cloud network to access LAN
+            add action=accept chain=forward in-interface-list=Cloud out-interface-list=LAN comment="Allow access from Cloud to LAN"
+            # Inter-VLAN routing rules
+            add action=accept chain=forward connection-state=new in-interface-list=Guest out-interface-list=Guest comment="Allow Guest to Guest communication"
+            add action=accept chain=forward connection-state=new in-interface-list=Infra out-interface-list=Infra comment="Allow Infra to Infra communication"
+            add action=accept chain=forward connection-state=new in-interface-list=Office out-interface-list=Office comment="Allow Office to Office communication"
+            add action=accept chain=forward connection-state=new in-interface-list=Security out-interface-list=Security comment="Allow Security to Security communication"
+            add action=accept chain=forward connection-state=new in-interface-list=VoIP out-interface-list=VoIP comment="Allow VoIP to VoIP communication"
+            add action=accept chain=forward in-interface-list=LAN out-interface-list=Cloud comment="Allow From Lan to Cloud communication"
+            # Allow ICMP on input chain
+            add action=accept chain=input protocol=icmp comment="Allow ICMP ping"
+            # Drop all other incoming connections on WAN interface
+            add action=drop chain=input in-interface-list=WAN comment="Drop all other incoming connections on WAN"
+            # Drop invalid and non-DSTNAT forwarded traffic from WAN
+            add action=drop chain=forward connection-nat-state=!dstnat out-interface-list=!WAN comment="Drop invalid and non-DSTNAT forward from WAN"
+            add action=drop chain=forward connection-nat-state=!dstnat connection-state=new in-interface-list=WAN comment="Drop new non-DSTNAT forward from WAN"
+            add action=drop chain=forward connection-state=invalid in-interface-list=WAN comment="Drop invalid forward from WAN"
 
                 ### Firewall NAT
                 /ip firewall nat
