@@ -2,7 +2,7 @@
 # rest same as new
 
 import random
-from extras.scripts import Script, StringVar, IntegerVar, ObjectVar, TextInput
+from extras.scripts import Script, StringVar, IntegerVar, ObjectVar
 from dcim.models import Site
 from ipam.models import VLAN, Prefix
 from ipam.choices import PrefixStatusChoices
