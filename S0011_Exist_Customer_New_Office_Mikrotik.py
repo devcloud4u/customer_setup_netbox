@@ -258,7 +258,7 @@ add name=$OpenVPNCloudUsername password=$OpenVPNCloudPassword profile=$OpenVPNPr
             # Create the script template with generated variables and settings
             script_template = f"""
 
-:global NameDevice "{data['customer_short_name']}-{data['customer_office_place']}-Office"
+:global NameDevice "{customer_short_name}-{data['customer_office_place']}-Office"
 :global AdminPassword "{password}"
 :global DnsServers "8.8.8.8,8.8.4.4,1.1.1.1"
 
