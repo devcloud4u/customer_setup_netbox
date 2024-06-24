@@ -189,7 +189,7 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
             """
             # Create the script template with generated variables and settings
             script_template = f"""
-                :global NameDevice "{data['customer_short_name']}-{data['customer_office_place']}-Office"
+                :global NameDevice "{customer_short_name}-{data['customer_office_place']}-Office"
                 :global AdminPassword "{password}"
                 :global DnsServers "8.8.8.8,8.8.4.4,1.1.1.1"
 
@@ -233,7 +233,7 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
 
                 # Cloud Server and Client Office side variables
                 :global OpenVPNCloudFirewallIPorHost "95.211.35.162"
-                :global OpenVPNCloudUsername "{data['customer_short_name']}-{data['customer_office_place']}-Office"
+                :global OpenVPNCloudUsername "{customer_short_name}-{data['customer_office_place']}-Office"
                 :global OpenVPNCloudPassword "{generate_password(20)}"
                 :global OpenVPNLocalIP "{data['local_vpn_ip']}"
                 :global OpenVPNOfficeSubnets "{aligned_office_prefix_base}/21"
