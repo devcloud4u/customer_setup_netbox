@@ -57,12 +57,6 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         required=True
     )
 
-    customer_cloud_vlanid = StringVar(
-        description="Customer cloud VLAN ID",
-        label="Customer Cloud VLAN ID",
-        required=True,
-    )
-
     customer_21_subnet = StringVar(
         description="Customer 21 subnet",
         label="Customer 21 Subnet",
