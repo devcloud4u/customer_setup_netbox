@@ -158,7 +158,7 @@ class S0010_New_Customer_New_Office_with_Cloud_Desktop(Script):
                                                               tenant=tenant)
             self.log_info(f"Office site {'created' if created else 'retrieved'}: {office_site.name}")
 
-            cloud_site_name = f"{data['customer_short_name']} Cloud"
+            cloud_zsite_name = f"{data['customer_short_name']} Cloud"
             cloud_site_slug = slugify(cloud_site_name)
             cloud_site, created = Site.objects.get_or_create(name=cloud_site_name, slug=cloud_site_slug, tenant=tenant)
             self.log_info(f"Cloud site {'created' if created else 'retrieved'}: {cloud_site.name}")
@@ -555,7 +555,7 @@ class S0010_New_Customer_New_Office_with_Cloud_Desktop(Script):
                 /interface list add name=$CustomerInterfaceList
                 /interface list add include=$CustomerInterfaceList name=Customers
 
-                # create openvpn interface
+                # create openvpn interface 
                 /interface ovpn-server add name=$OpenVPNServerInterfaceName user=$OpenVPNCloudUsername
                 # add openvpn interface to customer list
                 /interface list member add interface=$OpenVPNServerInterfaceName list=$CustomerInterfaceList
