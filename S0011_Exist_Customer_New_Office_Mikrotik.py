@@ -110,7 +110,7 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
     def run(self, data, commit):
         try:
             cloud_site = data['site']
-            customer_short_name = cloud_site.split(' ')[0]
+            customer_short_name = cloud_site.name.split(' ')[0]
             self.log_info(f"Customer /21 Subnet: {data['customer_21_subnet']}")
             validated_subnet_base = self.validate_and_format_subnet_base(data['customer_21_subnet'])
             self.log_info(f"Validated Subnet Base: {validated_subnet_base}")
