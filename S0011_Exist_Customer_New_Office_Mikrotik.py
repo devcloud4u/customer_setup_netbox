@@ -31,15 +31,6 @@ def generate_password(length=20):
     return ''.join(password)
 
 
-def get_placeholder_for_vlanid(self):
-    if 'site' in self.cleaned_data:
-        site = self.cleaned_data['site']
-        vlan = VLAN.objects.filter(site=site).first()
-        suggested_vlan_id = vlan.vid
-        return suggested_vlan_id
-    return "Enter VLAN ID"
-
-
 class S0011_Exist_Customer_New_Office_Mikrotik(Script):
     class Meta:
         name = "S0011 Exist Customer New Office Mikrotik"
@@ -70,7 +61,6 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         description="Customer cloud VLAN ID",
         label="Customer Cloud VLAN ID",
         required=True,
-        # widget=TextInput(attrs={'placeholder': get_placeholder_for_vlanid})
     )
 
     customer_21_subnet = StringVar(
