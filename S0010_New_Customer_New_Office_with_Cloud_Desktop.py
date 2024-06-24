@@ -3,7 +3,6 @@
 ## /system reset-configuration no-defaults=yes run-after-reset=flash/save.rsc
 ## extra info https://github.com/AlexDerugo/backup_mikrotik_from_netbox/blob/main/routers-backup.py
 
-
 #### Fill the form
 # Customer Full name = Tenant name ** slugs outomaticsh 
 # Customer Short Name =  1 word of customer without space
