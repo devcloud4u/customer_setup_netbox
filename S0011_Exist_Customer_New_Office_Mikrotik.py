@@ -2,7 +2,7 @@
 # rest same as new
 
 import random
-from extras.scripts import Script, StringVar, IntegerVar, ObjectVar
+from extras.scripts import Script, StringVar, IntegerVar, ObjectVar, TextInput
 from dcim.models import Site
 from ipam.models import VLAN, Prefix
 from ipam.choices import PrefixStatusChoices
@@ -51,6 +51,14 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         }
     )
 
+    def get_placeholder_for_vlanid(self):
+        if 'site' in self.cleaned_data:
+            site = self.cleaned_data['site']
+            vlan = VLAN.objects.filter(site=site).first()
+            suggested_vlan_id = vlan.vid
+            return suggested_vlan_id
+        return "Enter VLAN ID"
+
     customer_office_place = StringVar(
         description="Customer Office Place",
         label="Customer Office Place",
@@ -60,7 +68,8 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
     customer_cloud_vlanid = StringVar(
         description="Customer cloud VLAN ID",
         label="Customer Cloud VLAN ID",
-        required=True
+        required=True,
+        widget=TextInput(attrs={'placeholder': get_placeholder_for_vlanid})
     )
 
     customer_21_subnet = StringVar(
