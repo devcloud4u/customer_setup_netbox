@@ -14,7 +14,7 @@ from netaddr import IPNetwork, IPAddress
 
 class S0011_Exist_Customer_New_Office_Mikrotik(Script):
     class Meta:
-        name = "Custom Tenant Script"
+        name = "S0011 Exist Customer New Office Mikrotik"
         description = "Script with custom fields for tenant selection and additional customer information"
 
     tenant = ObjectVar(
