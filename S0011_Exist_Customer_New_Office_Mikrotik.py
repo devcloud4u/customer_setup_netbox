@@ -228,8 +228,9 @@ Office mikrotik code to copy paste
 # only Cloud Server Side variables
 :global OpenVPNServerInterfaceName "OpenVPN_{customer_short_name}-{data['customer_office_place']}-Office"
 :global CustomerFirewallRuleComment "{customer_short_name} to {customer_short_name}"
-:global CustomerInterfaceList "{data['customer_cloud_firewall_interface_list_name']}
+:global CustomerInterfaceList "{data['customer_cloud_firewall_interface_list_name']}"
 :global CustomerAdresList "{data['customer_address_list_name_in_cloud_mikrotik']}"
+:global CustomerOfficeBigSubnet "{base_ip}/21"
 
 
 # static variables
