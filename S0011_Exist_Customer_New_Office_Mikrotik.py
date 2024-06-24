@@ -190,6 +190,7 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
             self.log_info(f"Infra prefix {'created' if created else 'retrieved'}: {infra_prefix.prefix}")
 
             password = generate_password(20)
+            openvpn_password = generate_password(20)
 
             save_password_template = f"""
 passbolt please save this
@@ -203,7 +204,9 @@ Office mikrotik code to copy paste
 
             """
             cloud_template = f'''
-# This is For cloud site Mikrotik Config 
+# This is for Mikrotik Cloud to add new OpenVPN to Customer Office mikrotik  
+# For Office: "{customer_short_name}-{data['customer_office_place']}-Office"
+
 # Info
 #################
 # $CustomerInterfaceList = ask from user
@@ -231,7 +234,9 @@ Office mikrotik code to copy paste
 :global CustomerInterfaceList "{data['customer_cloud_firewall_interface_list_name']}"
 :global CustomerAdresList "{data['customer_address_list_name_in_cloud_mikrotik']}"
 :global CustomerOfficeBigSubnet "{base_ip}/21"
-
+:global OpenVPNLocalIP "{data['local_vpn_ip']}"
+:global OpenVPNCloudUsername "{customer_short_name}-{data['customer_office_place']}-Office"
+:global OpenVPNCloudPassword {openvpn_password}
 
 # static variables
 :global OpenVPNProfileName "OpenVPN_Profile"
@@ -304,7 +309,7 @@ add name=$OpenVPNCloudUsername password=$OpenVPNCloudPassword profile=$OpenVPNPr
 # Cloud Server and Client Office side variables
 :global OpenVPNCloudFirewallIPorHost "95.211.35.162"
 :global OpenVPNCloudUsername "{customer_short_name}-{data['customer_office_place']}-Office"
-:global OpenVPNCloudPassword "{generate_password(20)}"
+:global OpenVPNCloudPassword {openvpn_password}
 :global OpenVPNLocalIP "{data['local_vpn_ip']}"
 
 # only Cloud Server Side variables
