@@ -70,7 +70,7 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         description="Customer cloud VLAN ID",
         label="Customer Cloud VLAN ID",
         required=True,
-        widget=TextInput(attrs={'placeholder': get_placeholder_for_vlanid})
+        # widget=TextInput(attrs={'placeholder': get_placeholder_for_vlanid})
     )
 
     customer_21_subnet = StringVar(
