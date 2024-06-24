@@ -115,7 +115,6 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
             validated_subnet_base = self.validate_and_format_subnet_base(data['customer_21_subnet'])
             self.log_info(f"Validated Subnet Base: {validated_subnet_base}")
 
-            tenant_group, created = TenantGroup.objects.get_or_create(name='Customers')
             tenant = data['tenant']
             self.log_info(f"Tenant 'retrieved': {tenant.name}")
 
@@ -125,7 +124,6 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
                 name=office_site_name,
                 slug=office_site_slug,
                 tenant=tenant,
-                tenant_group=tenant_group,
             )
 
             self.log_info(f"Office site {'created' if created else 'retrieved'}: {office_site.name}")
