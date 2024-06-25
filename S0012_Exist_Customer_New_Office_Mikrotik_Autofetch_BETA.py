@@ -2,6 +2,7 @@
 # rest same as new
 
 import random
+import netaddr
 from extras.scripts import Script, StringVar, IntegerVar, ObjectVar, ChoiceVar
 from dcim.models import Site
 from ipam.models import VLAN, Prefix
@@ -96,9 +97,11 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         available_subnets = []
 
         for prefix in tagged_prefixes:
-            child_prefixes = prefix.get_child_prefixes()
-            available_children = child_prefixes.get_available_prefixes()
-            for child_prefix in available_children:
+            prefix = netaddr.IPSet(prefix)
+            child_prefixes = netaddr.IPSet([child.prefix for child in self.get_child_prefixes()])
+            available_prefixes = prefix - child_prefixes
+            for child_prefix in available_prefixes:
+                self.log_info(f"child prefix: {child_prefix}")
                 available_subnets.append((child_prefix.id, child_prefix.prefix))
 
         return available_subnets
