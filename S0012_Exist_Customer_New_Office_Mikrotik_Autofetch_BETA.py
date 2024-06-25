@@ -87,13 +87,13 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
 
     def prepare(self):
         # Dynamically populate the choices for customer_21_subnet
-        tag = Tag.objects.get(slug='active-customer-office-subne')
+        tag = Tag.objects.get(slug='active-customer-office-subnet')
         tagged_prefixes = Prefix.objects.filter(tags__in=[tag])
         available_subnet_pks = []
 
         for prefix in tagged_prefixes:
             prefix_set = netaddr.IPSet([prefix.prefix])
-            child_prefixes = netaddr.IPSet([child.prefix for child in prefix.get_child_prefixes()])
+            child_prefixes = netaddr.IPSet([child.prefix for child in prefix.get_child_prefixes(23,2)])
             available_prefixes = prefix_set - child_prefixes
 
             for available_prefix in available_prefixes.iter_cidrs():
