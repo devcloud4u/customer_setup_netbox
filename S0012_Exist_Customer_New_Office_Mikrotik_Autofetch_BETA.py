@@ -85,28 +85,6 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         required=True
     )
 
-    def prepare(self):
-        # Dynamically populate the choices for customer_21_subnet
-        tag = Tag.objects.get(slug='active-customer-office-subnet')
-        tagged_prefixes = Prefix.objects.filter(tags__in=[tag])
-        available_subnet_pks = []
-
-        for prefix in tagged_prefixes:
-            prefix_set = netaddr.IPSet([prefix.prefix])
-            child_prefixes = netaddr.IPSet([child.prefix for child in prefix.get_child_prefixes()])
-            available_prefixes = prefix_set - child_prefixes
-
-            for available_prefix in available_prefixes.iter_cidrs():
-                if available_prefix.prefixlen == 21:
-                    # Find the Prefix object for this available prefix
-                    try:
-                        available_prefix_obj = Prefix.objects.get(prefix=str(available_prefix))
-                        available_subnet_pks.append(available_prefix_obj.pk)
-                    except Prefix.DoesNotExist:
-                        pass
-
-        self.fields['customer_21_subnet'].query_params = {'pk__in': available_subnet_pks}
-
     @staticmethod
     def validate_and_format_subnet_base(ip_base):
         # Strip the subnet mask if present
