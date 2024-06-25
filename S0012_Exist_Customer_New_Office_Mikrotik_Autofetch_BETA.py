@@ -93,17 +93,15 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
 
         # For each tagged prefix, find available /21 subnets within it
         for tagged_prefix in tagged_prefixes:
-            prefix_set = netaddr.IPSet([tagged_prefix.prefix])
-            child_prefixes_set = netaddr.IPSet([child.prefix for child in tagged_prefix.get_child_prefixes()])
-            available_prefixes = prefix_set - child_prefixes_set
-
-            for subnet in available_prefixes.iter_cidrs():
-                if subnet.prefixlen == 21:
-                    available_subnets.append(str(subnet))
+            # Get available child prefixes with /21 length within the tagged prefix
+            child_prefixes = tagged_prefix.get_available_prefixes()
+            for child_prefix in child_prefixes.iter_cidrs():
+                if child_prefix.prefixlen == 21:
+                    available_subnets.append(child_prefix)
 
         # Update the query parameters for customer_21_subnet
         self.fields['customer_21_subnet'].query_params = {
-            'prefix__in': available_subnets
+            'prefix__in': [str(subnet) for subnet in available_subnets]
         }
 
     @staticmethod
