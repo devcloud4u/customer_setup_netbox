@@ -10,7 +10,6 @@ from tenancy.models import Tenant, TenantGroup
 from extras.models import JournalEntry
 from django.template.defaultfilters import slugify
 from netaddr import IPNetwork, IPAddress
-from utilities.forms import DynamicModelChoiceField
 
 
 def generate_password(length=20):
@@ -60,10 +59,16 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         required=True
     )
 
-    customer_21_subnet = StringVar(
-        description="Customer 21 subnet for example 10.12.72 (Dont use)",
+    customer_21_subnet = ObjectVar(
+        model=Prefix,
+        description="Customer 21 subnet",
         label="Customer 21 Subnet",
-        required=True
+        required=True,
+        query_params={
+            'tag': 'active-customer-office-subnet',
+            'children': 'available',
+            'prefix_length': 21
+        }
     )
 
     local_vpn_ip = StringVar(
@@ -82,14 +87,6 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         description="Pls check on Cloud Mikrotik 'IP' --> 'Firewall' --> 'Address List' and find customer address list name like 0078-Cova",
         label="Customer Address List Name in Cloud Mikrotik",
         required=True
-    )
-    customer_cloud_vlanid = DynamicModelChoiceField(
-        queryset=VLAN.objects.first(),
-        label="Customer Cloud VLAN ID",
-        required=True,
-        query_params={
-            'site_id': '$site'
-        }
     )
 
     @staticmethod
