@@ -2,7 +2,7 @@
 # rest same as new
 
 import random
-from extras.scripts import Script, StringVar, IntegerVar, ObjectVar
+from extras.scripts import Script, StringVar, IntegerVar, ObjectVar, ChoiceVar
 from dcim.models import Site
 from ipam.models import VLAN, Prefix
 from ipam.choices import PrefixStatusChoices
@@ -10,6 +10,7 @@ from tenancy.models import Tenant, TenantGroup
 from extras.models import JournalEntry
 from django.template.defaultfilters import slugify
 from netaddr import IPNetwork, IPAddress
+from extras.models import Tag
 
 
 def generate_password(length=20):
@@ -59,16 +60,11 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         required=True
     )
 
-    customer_21_subnet = ObjectVar(
-        model=Prefix,
+    customer_21_subnet = ChoiceVar(
+        choices=[],
         description="Customer 21 subnet",
         label="Customer 21 Subnet",
-        required=True,
-        query_params={
-            'tag': 'active-customer-office-subnet',
-            'children': 'available',
-            'prefix_length': 21
-        }
+        required=True
     )
 
     local_vpn_ip = StringVar(
@@ -88,6 +84,18 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         label="Customer Address List Name in Cloud Mikrotik",
         required=True
     )
+
+    def populate(self):
+        tag = Tag.objects.get(name='active-customer-office-subnet')
+        tagged_prefixes = Prefix.objects.filter(tags__in=[tag])
+        available_subnets = []
+
+        for prefix in tagged_prefixes:
+            child_prefixes = prefix.get_available_prefixes(new_prefix_length=21)
+            for child_prefix in child_prefixes:
+                available_subnets.append((str(child_prefix), str(child_prefix)))
+
+        self.fields['customer_21_subnet'].choices = available_subnets
 
     @staticmethod
     def validate_and_format_subnet_base(ip_base):
