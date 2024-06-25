@@ -96,9 +96,10 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         available_subnets = []
 
         for prefix in tagged_prefixes:
-            child_prefixes = prefix.get_available_prefixes()
-            for child_prefix in child_prefixes:
-                available_subnets.append((child_prefix.pk, str(child_prefix)))
+            child_prefixes = prefix.get_child_prefixes()
+            available_children = child_prefixes.get_available_prefixes()
+            for child_prefix in available_children:
+                available_subnets.append((child_prefix.id, child_prefix.prefix))
 
         return available_subnets
 
