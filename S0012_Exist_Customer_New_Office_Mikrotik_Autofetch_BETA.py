@@ -61,8 +61,8 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         required=True
     )
 
-    customer_21_subnet = ChoiceVar(
-        choices=[],
+    customer_21_subnet = ObjectVar(
+        model=Prefix,
         label="Customer 21 Subnet",
         required=True
     )
@@ -85,22 +85,25 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         required=True
     )
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.customer_21_subnet.query_params = self.get_customer_21_subnet_query_params()
 
-        # Get available subnets for customer_21_subnet
+    def get_customer_21_subnet_query_params(self):
         tag = Tag.objects.get(slug='active-customer-office-subnet')
         tagged_prefixes = Prefix.objects.filter(tags__in=[tag])
         available_subnets = []
 
         for prefix in tagged_prefixes:
-            child_prefixes_set = prefix.get_child_prefixes()
-            for child_prefix in child_prefixes_set:
-                if child_prefix.prefix.prefixlen == 21:
-                    available_subnets.append((str(child_prefix.prefix), str(child_prefix.prefix)))
+            prefix_set = netaddr.IPSet([prefix.prefix])
+            child_prefixes_set = netaddr.IPSet([child.prefix for child in prefix.get_child_prefixes()])
+            available_prefixes = prefix_set - child_prefixes_set
 
-        self.customer_21_subnet.choices = available_subnets
+            for subnet in available_prefixes.iter_cidrs():
+                if subnet.prefixlen == 21:
+                    available_subnets.append(str(subnet))
 
+        return {'prefix__in': available_subnets}
 
     @staticmethod
     def validate_and_format_subnet_base(ip_base):
