@@ -85,11 +85,8 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         required=True
     )
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['customer_21_subnet'].query_params = self.get_customer_21_subnet_choices()
-
-    def get_customer_21_subnet_choices(self):
+    def prepare(self):
+        # Dynamically populate the choices for customer_21_subnet
         tag = Tag.objects.get(slug='active-customer-office-subnet')
         tagged_prefixes = Prefix.objects.filter(tags__in=[tag])
         available_subnet_pks = []
@@ -108,7 +105,7 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
                     except Prefix.DoesNotExist:
                         pass
 
-        return {'pk__in': available_subnet_pks}
+        self.fields['customer_21_subnet'].query_params = {'pk__in': available_subnet_pks}
 
     @staticmethod
     def validate_and_format_subnet_base(ip_base):
