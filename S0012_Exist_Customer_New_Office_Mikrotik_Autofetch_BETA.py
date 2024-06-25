@@ -95,7 +95,7 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         available_subnets = []
 
         for tagged_prefix in tagged_prefixes:
-            child_prefixes = tagged_prefix.get_available_prefixes(new_prefix_length=21)
+            child_prefixes = tagged_prefix.get_available_prefixes()
             for child_prefix in child_prefixes:
                 available_subnets.append(child_prefix)
 
