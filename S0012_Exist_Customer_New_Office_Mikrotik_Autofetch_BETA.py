@@ -90,7 +90,7 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         self.customer_21_subnet.query_params = self.get_customer_21_subnet_query_params()
 
     def get_customer_21_subnet_query_params(self):
-        tag = Tag.objects.get(slug='active-customer-office-subnet')
+        tag = Tag.objects.get(slug='active-customer-office-subn')
         tagged_prefixes = Prefix.objects.filter(tags__in=[tag])
         available_subnets = []
 
