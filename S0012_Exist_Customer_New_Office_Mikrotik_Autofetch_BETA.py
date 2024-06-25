@@ -60,9 +60,8 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         required=True
     )
 
-    customer_21_subnet = ChoiceVar(
-        choices=[],
-        description="Customer 21 subnet",
+    customer_21_subnet = ObjectVar(
+        model=Prefix,
         label="Customer 21 Subnet",
         required=True
     )
@@ -85,19 +84,23 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         required=True
     )
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        tag = Tag.objects.get(slug='active-customer-office-subnet')
+        # Dynamically populate the choices for customer_21_subnet
+        self.fields['customer_21_subnet'].choices = self.get_customer_21_subnet_choices()
+
+    def get_customer_21_subnet_choices(self):
+        tag = Tag.objects.get(name='active-customer-office-subnet')
         tagged_prefixes = Prefix.objects.filter(tags__in=[tag])
         available_subnets = []
 
         for prefix in tagged_prefixes:
-            child_prefixes = prefix.get_available_prefixes()
+            child_prefixes = prefix.get_available_prefixes(new_prefix_length=21)
             for child_prefix in child_prefixes:
-                available_subnets.append((str(child_prefix), str(child_prefix)))
+                available_subnets.append((child_prefix.pk, str(child_prefix)))
 
-        self.fields['customer_21_subnet'].choices = available_subnets
+        return available_subnets
 
     @staticmethod
     def validate_and_format_subnet_base(ip_base):
