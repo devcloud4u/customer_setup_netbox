@@ -91,7 +91,7 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         self.fields['customer_21_subnet'].choices = self.get_customer_21_subnet_choices()
 
     def get_customer_21_subnet_choices(self):
-        tag = Tag.objects.get(name='active-customer-office-subnet')
+        tag = Tag.objects.get(slug='active-customer-office-subnet')
         tagged_prefixes = Prefix.objects.filter(tags__in=[tag])
         available_subnets = []
 
