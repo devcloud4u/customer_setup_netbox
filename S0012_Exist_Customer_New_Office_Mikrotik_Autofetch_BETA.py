@@ -100,7 +100,7 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
                 available_subnets.append(child_prefix)
 
         return {'prefix__in': [str(subnet) for subnet in available_subnets]}
-    `
+
     @staticmethod
     def validate_and_format_subnet_base(ip_base):
         # Strip the subnet mask if present
