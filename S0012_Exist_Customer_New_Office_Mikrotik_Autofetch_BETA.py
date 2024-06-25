@@ -86,7 +86,7 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
     )
 
     def populate(self):
-        tag = Tag.objects.get(name='active-customer-office-subnet')
+        tag = Tag.objects.get(name='Active Customer Office Subnet')
         tagged_prefixes = Prefix.objects.filter(tags__in=[tag])
         available_subnets = []
 
