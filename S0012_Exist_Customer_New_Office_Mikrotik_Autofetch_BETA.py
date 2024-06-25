@@ -65,6 +65,7 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         model=Prefix,
         label="Customer 21 Subnet",
         required=True,
+        query_params=None
     )
 
     local_vpn_ip = StringVar(
@@ -85,27 +86,27 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         required=True
     )
 
-    def prepare(self):
-        # Dynamically populate the choices for customer_21_subnet
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['customer_21_subnet'].query_params = self.get_customer_21_subnet_query_params()
+
+    def get_customer_21_subnet_query_params(self):
         tag = Tag.objects.get(slug='active-customer-office-subnet')
         tagged_prefixes = Prefix.objects.filter(tags__in=[tag])
-        available_subnet_pks = []
+        available_subnets = []
 
         for prefix in tagged_prefixes:
             prefix_set = netaddr.IPSet([prefix.prefix])
-            child_prefixes = netaddr.IPSet([child.prefix for child in prefix.get_child_prefixes(23,2)])
-            available_prefixes = prefix_set - child_prefixes
+            child_prefixes_set = netaddr.IPSet([child.prefix for child in prefix.get_child_prefixes()])
+            available_prefixes = prefix_set - child_prefixes_set
 
-            for available_prefix in available_prefixes.iter_cidrs():
-                if available_prefix.prefixlen == 21:
-                    # Find the Prefix object for this available prefix
-                    try:
-                        available_prefix_obj = Prefix.objects.get(prefix=str(available_prefix))
-                        available_subnet_pks.append(available_prefix_obj.pk)
-                    except Prefix.DoesNotExist:
-                        pass
+            for subnet in available_prefixes.iter_cidrs():
+                if subnet.prefixlen == 21:
+                    available_subnets.append(str(subnet))
 
-        self.fields['customer_21_subnet'].query_params = {'pk__in': available_subnet_pks}
+        # Return the query params with available subnets
+        return {'prefix__in': available_subnets}
+
 
     @staticmethod
     def validate_and_format_subnet_base(ip_base):
