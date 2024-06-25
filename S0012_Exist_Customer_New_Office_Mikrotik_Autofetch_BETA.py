@@ -66,6 +66,7 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         label="Customer 21 Subnet",
         required=True,
         query_params={
+            'status': 'active',
             'tag': 'active-customer-office-subnet'
         }
     )
