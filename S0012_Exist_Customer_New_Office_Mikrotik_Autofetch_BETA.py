@@ -90,18 +90,17 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         self.customer_21_subnet.query_params = self.get_customer_21_subnet_query_params()
 
     def get_customer_21_subnet_query_params(self):
-        tag = Tag.objects.get(slug='active-customer-office-subn')
-        tagged_prefixes = Prefix.objects.filter(tags__in=[tag])
+        tag = Tag.objects.get(slug='active-customer-office-subnet')
+        tagged_prefix = Prefix.objects.filter(tags__in=[tag]).first()
         available_subnets = []
 
-        for prefix in tagged_prefixes:
-            prefix_set = netaddr.IPSet([prefix.prefix])
-            child_prefixes_set = netaddr.IPSet([child.prefix for child in prefix.get_child_prefixes()])
-            available_prefixes = prefix_set - child_prefixes_set
+        prefix_set = netaddr.IPSet([tagged_prefix.prefix])
+        child_prefixes_set = netaddr.IPSet([child.prefix for child in tagged_prefix.get_child_prefixes()])
+        available_prefixes = prefix_set - child_prefixes_set
 
-            for subnet in available_prefixes.iter_cidrs():
-                if subnet.prefixlen == 21:
-                    available_subnets.append(str(subnet))
+        for subnet in available_prefixes.iter_cidrs():
+            if subnet.prefixlen == 21:
+                available_subnets.append(str(subnet))
 
         return {'prefix__in': available_subnets}
 
