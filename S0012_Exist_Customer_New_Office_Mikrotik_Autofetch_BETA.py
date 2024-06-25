@@ -65,9 +65,6 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         model=Prefix,
         label="Customer 21 Subnet",
         required=True,
-        query_params={
-            'tag': 'active-customer-office-subnet',
-        }
     )
 
     local_vpn_ip = StringVar(
@@ -95,7 +92,7 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
     def get_customer_21_subnet_choices(self):
         tag = Tag.objects.get(slug='active-customer-office-subnet')
         tagged_prefixes = Prefix.objects.filter(tags__in=[tag])
-        available_subnets = []
+        available_subnet_pks = []
 
         for prefix in tagged_prefixes:
             prefix_set = netaddr.IPSet([prefix.prefix])
@@ -104,9 +101,14 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
 
             for available_prefix in available_prefixes.iter_cidrs():
                 if available_prefix.prefixlen == 21:
-                    available_subnets.append(available_prefix.pk)
+                    # Find the Prefix object for this available prefix
+                    try:
+                        available_prefix_obj = Prefix.objects.get(prefix=str(available_prefix))
+                        available_subnet_pks.append(available_prefix_obj.pk)
+                    except Prefix.DoesNotExist:
+                        pass
 
-        return {'pk__in': available_subnets}
+        return {'pk__in': available_subnet_pks}
 
     @staticmethod
     def validate_and_format_subnet_base(ip_base):
