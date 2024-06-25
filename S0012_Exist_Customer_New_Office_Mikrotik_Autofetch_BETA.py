@@ -100,11 +100,7 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
             prefix = netaddr.IPSet(prefix)
             child_prefixes = netaddr.IPSet([child.prefix for child in self.get_child_prefixes()])
             available_prefixes = prefix - child_prefixes
-            for child_prefix in available_prefixes:
-                self.log_info(f"child prefix: {child_prefix}")
-                available_subnets.append((child_prefix.id, child_prefix.prefix))
-
-        return available_subnets
+            return available_prefixes
 
     @staticmethod
     def validate_and_format_subnet_base(ip_base):
