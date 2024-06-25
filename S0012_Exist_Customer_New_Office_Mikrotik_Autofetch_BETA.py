@@ -85,21 +85,26 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         required=True
     )
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['customer_21_subnet'].query_params = self.get_customer_21_subnet_query_params()
-
-    def get_customer_21_subnet_query_params(self):
+    def prepare(self):
+        # Get the tag and find all prefixes tagged with it
         tag = Tag.objects.get(slug='active-customer-office-subnet')
         tagged_prefixes = Prefix.objects.filter(tags__in=[tag])
         available_subnets = []
 
+        # For each tagged prefix, find available /21 subnets within it
         for tagged_prefix in tagged_prefixes:
-            child_prefixes = tagged_prefix.get_available_prefixes()
-            for child_prefix in child_prefixes:
-                available_subnets.append(child_prefix)
+            prefix_set = netaddr.IPSet([tagged_prefix.prefix])
+            child_prefixes_set = netaddr.IPSet([child.prefix for child in tagged_prefix.get_child_prefixes()])
+            available_prefixes = prefix_set - child_prefixes_set
 
-        return {'prefix__in': [str(subnet) for subnet in available_subnets]}
+            for subnet in available_prefixes.iter_cidrs():
+                if subnet.prefixlen == 21:
+                    available_subnets.append(str(subnet))
+
+        # Set the query_params for customer_21_subnet
+        self.customer_21_subnet.field.query_params = {
+            'prefix__in': available_subnets
+        }
 
     @staticmethod
     def validate_and_format_subnet_base(ip_base):
