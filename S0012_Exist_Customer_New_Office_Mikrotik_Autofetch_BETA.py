@@ -170,6 +170,7 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
             return []
 
         ip_set = netaddr.IPSet(tagged_prefix.prefix)
+        self.log_info(f"ip_set: {ip_set}")
         used_ips = netaddr.IPSet(IPAMIPAddress.objects.filter(
             address__net_contained_or_equal=str(tagged_prefix.prefix)
         ).values_list('address', flat=True))
