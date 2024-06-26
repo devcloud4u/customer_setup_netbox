@@ -165,26 +165,30 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         tag = Tag.objects.get(slug='active-customer-openvpn-ip')
         tagged_prefix = Prefix.objects.filter(tags__in=[tag]).first()
         self.log_info(f"tagged_prefix: {tagged_prefix}")
+        self.log_info(f"dir: {dir(tagged_prefix)}")
 
         if not tagged_prefix:
             return []
 
-        ip_set = netaddr.IPSet(tagged_prefix.prefix)
+        ip_set = netaddr.IPSet([tagged_prefix.prefix])
         self.log_info(f"ip_set: {ip_set}")
         used_ips = netaddr.IPSet(IPAMIPAddress.objects.filter(
             address__net_contained_or_equal=str(tagged_prefix.prefix)
         ).values_list('address', flat=True))
+
         self.log_info(f"used_ips: {used_ips}")
-
         available_ips = ip_set - used_ips
-        self.log_info(f"available_ips: {available_ips}")
 
+        self.log_info(f"available_ips: {available_ips}")
         if not available_ips:
             return []
 
-        new_ip = next(iter(available_ips))
-        self.log_info(f"new_ip: {new_ip}")
-        list_of_one_ip = [(str(new_ip), str(new_ip))]
+        self.log_info(f"tagged_prefix: {tagged_prefix.prefix}")
+        # Iterate over the entire range of the prefix to find the first unused IP
+        for ip in tagged_prefix.prefix:
+            if ip not in used_ips:
+                self.log_info(f"[(str(ip), str(ip))]: {[(str(ip), str(ip))]}")
+
         tenant = data['tenant']
         site = data['site']
         customer_office_place = data['customer_office_place']
