@@ -151,6 +151,7 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
 
     def run(self, data, commit):
         tenant = data['tenant']
+        self.log_info(f"Tenant: {tenant}")
         site = data['site']
         customer_office_place = data['customer_office_place']
         selected_subnet = data['customer_21_subnet']
