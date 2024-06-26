@@ -61,11 +61,13 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         required=True
     )
 
-    customer_21_subnet = ChoiceVar(
-        choices=[],
-        description="Customer 21 subnet",
+    customer_21_subnet = ObjectVar(
+        model=Prefix,
         label="Customer 21 Subnet",
-        required=True
+        required=True,
+        query_params={
+            'tag': 'active-customer-office-subnet'
+        }
     )
 
     local_vpn_ip = StringVar(
@@ -86,11 +88,12 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         required=True
     )
 
-    # def __init__(self, *args, **kwargs):
-    #     super().__init__(*args, **kwargs)
-    #     self.customer_21_subnet.choices = self.prepare()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields.customer_21_subnet.query_params = self.prepare()
 
     def prepare(self):
+        # Get the tag and find all prefixes tagged with it
         tag = Tag.objects.get(slug='active-customer-office-subnet')
         tagged_prefixes = Prefix.objects.filter(tags__in=[tag])
         available_subnets = []
@@ -105,7 +108,10 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
                 if subnet.prefixlen == 21:
                     available_subnets.append(str(subnet))
 
-        return [(i, prefix) for i, prefix in enumerate(available_subnets)]
+        # Set the query_params for customer_21_subnet
+        return {
+            'prefix__in': available_subnets
+        }
 
     @staticmethod
     def validate_and_format_subnet_base(ip_base):
