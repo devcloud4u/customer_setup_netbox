@@ -164,7 +164,7 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
                     available_subnets.append(str(subnet))
 
         prefixs = Prefix.objects.filter(prefix__in=available_subnets).all()
-        self.log_info(prefixs)
+        self.log_info(f"Customer /21 Subnet: {prefixs}")
 #             cloud_site = data['site']
 #             vlan = VLAN.objects.filter(site=cloud_site).first()
 #             cloud_vlan_id = vlan.vid
