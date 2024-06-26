@@ -168,6 +168,7 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
                     self.log_info(f"str(subnet): {str(subnet)}")
                     available_subnets.append(str(subnet))
 
+        self.log_info(f"available_subnets: {available_subnets}")
         prefixs = Prefix.objects.filter(prefix__in=available_subnets).all()
         self.log_info(f"Customer /21 Subnet: {prefixs}")
 #             cloud_site = data['site']
