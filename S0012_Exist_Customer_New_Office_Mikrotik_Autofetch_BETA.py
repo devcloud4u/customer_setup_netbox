@@ -151,16 +151,21 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
 
         tag = Tag.objects.get(slug='active-customer-office-subnet')
         tagged_prefixes = Prefix.objects.filter(tags__in=[tag])
+        self.log_info(f"tagged_prefixes: {tagged_prefixes}")
         available_subnets = []
 
         # For each tagged prefix, find available /21 subnets within it
         for tagged_prefix in tagged_prefixes:
             prefix_set = netaddr.IPSet([tagged_prefix.prefix])
             child_prefixes_set = netaddr.IPSet([child.prefix for child in tagged_prefix.get_child_prefixes()])
+            self.log_info(f"child_prefixes_set: {child_prefixes_set}")
             available_prefixes = prefix_set - child_prefixes_set
+            self.log_info(f"available_prefixes: {available_prefixes}")
 
             for subnet in available_prefixes.iter_cidrs():
+                self.log_info(f"subnet {subnet}")
                 if subnet.prefixlen == 21:
+                    self.log_info(f"str(subnet): {str(subnet)}")
                     available_subnets.append(str(subnet))
 
         prefixs = Prefix.objects.filter(prefix__in=available_subnets).all()
