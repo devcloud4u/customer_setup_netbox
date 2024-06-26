@@ -66,7 +66,6 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         label="Customer 21 Subnet",
         required=True,
         query_params={
-            'status': 'active',
             'tag': 'active-customer-office-subnet'
         }
     )
@@ -91,7 +90,7 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.customer_21_subnet.query_params = self.prepare()
+        self.fields.customer_21_subnet.query_params = self.prepare()
 
     def prepare(self):
         # Get the tag and find all prefixes tagged with it
