@@ -168,7 +168,7 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         if not tagged_prefix:
             return []
 
-        used_ips = tagged_prefix.get_child_ips()
+        used_ips = tagged_prefix.get_first_available_ip()
         self.log_info(f"used_ips: {used_ips}")
         used_ip_set = netaddr.IPSet([ip.address.ip for ip in used_ips])
         self.log_info(f"used_ip_set: {used_ip_set}")
