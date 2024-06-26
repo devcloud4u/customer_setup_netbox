@@ -105,7 +105,7 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
                 if subnet.prefixlen == 21:
                     available_subnets.append(str(subnet))
 
-        return [(prefix, prefix) for prefix in available_subnets]
+        return [(i, prefix) for i, prefix in enumerate(available_subnets)]
 
     @staticmethod
     def validate_and_format_subnet_base(ip_base):
