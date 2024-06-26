@@ -61,7 +61,7 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         required=True
     )
 
-    customer_21_subnet = ObjectVar(
+    customer_21_subnet = ChoiceVar(
         model=Prefix,
         label="Customer 21 Subnet",
         required=True,
@@ -91,7 +91,6 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         self.fields.customer_21_subnet.choices = self.prepare()
 
     def prepare(self):
-        # Get the tag and find all prefixes tagged with it
         tag = Tag.objects.get(slug='active-customer-office-subnet')
         tagged_prefixes = Prefix.objects.filter(tags__in=[tag])
         available_subnets = []
