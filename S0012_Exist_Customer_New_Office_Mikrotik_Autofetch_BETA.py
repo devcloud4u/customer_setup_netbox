@@ -66,7 +66,7 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         label="Customer 21 Subnet",
         required=True,
         query_params={
-            'prefix__in': ['10.202.8.0/21', '10.203.8.0/21', '10.203.24.0/21', '10.204.8.0/21', '10.205.8.0/21']
+            'q': ['10.202.8.0/21', '10.203.8.0/21', '10.203.24.0/21', '10.204.8.0/21', '10.205.8.0/21']
         }
     )
 
