@@ -71,14 +71,21 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         required=True
     )
 
+    # site = ObjectVar(
+    #     model=Site,
+    #     label="Select Customer Cloud Site",
+    #     description="Cloud Mikrotik Config will be pushed on this site",
+    #     required=True,
+    #     query_params={
+    #         'tenant_id': '$tenant'
+    #     }
+    # )
     site = ObjectVar(
         model=Site,
-        label="Select Customer Cloud Site",
-        description="Cloud Mikrotik Config will be pushed on this site",
-        required=True,
-        query_params={
-            'tenant_id': '$tenant'
-        }
+        label="Select Site",
+        context={'label': 'name', 'sub_label': 'tenant__name'},
+        query_params={'status': 'active'},
+        null_option="Select a site"
     )
 
     customer_office_place = StringVar(
