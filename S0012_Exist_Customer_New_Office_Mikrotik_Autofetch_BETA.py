@@ -5,7 +5,7 @@ import random
 import netaddr
 from extras.scripts import Script, StringVar, IntegerVar, ObjectVar, ChoiceVar
 from dcim.models import Site
-from ipam.models import VLAN, Prefix
+from ipam.models import VLAN, Prefix, IPAddress as IPAMIPAddress
 from ipam.choices import PrefixStatusChoices
 from tenancy.models import Tenant, TenantGroup
 from extras.models import JournalEntry
@@ -32,7 +32,6 @@ def generate_password(length=20):
     random.shuffle(password)
     return ''.join(password)
 
-
 def get_customer_21_subnet_choices():
     # Get the tag and find all prefixes tagged with it
     tag = Tag.objects.get(slug='active-customer-office-subnet')
@@ -49,8 +48,29 @@ def get_customer_21_subnet_choices():
             if subnet.prefixlen == 21:
                 available_subnets.append((str(subnet), str(subnet)))
 
-    # Set the query_params for customer_21_subnet
+    # Return the available subnets
     return available_subnets
+
+
+def get_new_vpn_ip():
+    tag = Tag.objects.get(slug='active-customer-openvpn-ip')
+    tagged_prefix = Prefix.objects.filter(tags__in=[tag]).first()
+
+    if not tagged_prefix:
+        return None
+
+    ip_set = netaddr.IPSet(tagged_prefix.prefix)
+    used_ips = netaddr.IPSet(IPAMIPAddress.objects.filter(
+        address__net_contained_or_equal=str(tagged_prefix.prefix)
+    ).values_list('address', flat=True))
+
+    available_ips = ip_set - used_ips
+
+    if not available_ips:
+        return None
+
+    new_ip = next(iter(available_ips))
+    return str(new_ip)
 
 
 class S0011_Exist_Customer_New_Office_Mikrotik(Script):
@@ -90,7 +110,8 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
     local_vpn_ip = StringVar(
         description="Local VPN IP",
         label="Local VPN IP",
-        required=True
+        required=True,
+        default=get_new_vpn_ip()
     )
 
     customer_cloud_firewall_interface_list_name = StringVar(
@@ -104,12 +125,6 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         label="Customer Address List Name in Cloud Mikrotik",
         required=True
     )
-
-    # def __init__(self, *args, **kwargs):
-    #     super().__init__(*args, **kwargs)
-    #     self.customer_21_subnet.choices = self.get_customer_21_subnet_choices()
-
-
 
     @staticmethod
     def validate_and_format_subnet_base(ip_base):
@@ -150,8 +165,22 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         return str(ip + count)
 
     def run(self, data, commit):
-        self.log_info(f"dir: {dir(self.customer_21_subnet)}")
-        self.log_info(f"dir: {self.customer_21_subnet.choices}")
+        tenant = data['tenant']
+        site = data['site']
+        customer_office_place = data['customer_office_place']
+        selected_subnet = data['customer_21_subnet']
+        local_vpn_ip = data['local_vpn_ip']
+        customer_cloud_firewall_interface_list_name = data['customer_cloud_firewall_interface_list_name']
+        customer_address_list_name_in_cloud_mikrotik = data['customer_address_list_name_in_cloud_mikrotik']
+
+        # Create the new IPAddress object and save it
+        ip_address = IPAMIPAddress(
+            address=f"{local_vpn_ip}",
+            tenant=tenant,
+            status="active",
+        )
+        ip_address.save()
+
 #         try:
 #             cloud_site = data['site']
 #             vlan = VLAN.objects.filter(site=cloud_site).first()
