@@ -31,6 +31,7 @@ def generate_password(length=20):
     random.shuffle(password)
     return ''.join(password)
 
+
 def get_customer_21_subnet_choices():
     tag = Tag.objects.get(slug='active-customer-office-subnet')
     tagged_prefixes = Prefix.objects.filter(tags__in=[tag])
@@ -109,15 +110,6 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         label="Customer Address List Name in Cloud Mikrotik",
         required=True
     )
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        tenant = self.tenant
-        if tenant:
-            self.customer_cloud_firewall_interface_list_name.default = tenant.customer_cloud_firewall_interface_list_name
-            self.customer_address_list_name_in_cloud_mikrotik.initial = tenant.customer_address_list_name_in_cloud_mikrotik
-
 
     @staticmethod
     def validate_and_format_subnet_base(ip_base):
