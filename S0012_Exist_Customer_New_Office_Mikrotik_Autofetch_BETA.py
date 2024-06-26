@@ -152,7 +152,7 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         return str(ip + count)
 
     def run(self, data, commit):
-        self.log_info(f"dir: {dir(self)}")
+        self.log_info(f"dir: {dir(self.customer_21_subnet)}")
 #         try:
 #             cloud_site = data['site']
 #             vlan = VLAN.objects.filter(site=cloud_site).first()
