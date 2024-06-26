@@ -88,7 +88,7 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields.customer_21_subnet.choices = self.prepare()
+        self.customer_21_subnet.choices = self.prepare()
 
     def prepare(self):
         tag = Tag.objects.get(slug='active-customer-office-subnet')
