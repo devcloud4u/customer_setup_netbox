@@ -70,7 +70,8 @@ def get_local_vpn_ip_choices():
         return None
 
     new_ip = next(iter(available_ips))
-    return [(str(new_ip), str(new_ip))]
+    list_od_one_ip = [(str(new_ip), str(new_ip))]
+    return list_od_one_ip
 
 
 class S0011_Exist_Customer_New_Office_Mikrotik(Script):
@@ -109,7 +110,6 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
 
     local_vpn_ip = ChoiceVar(
         choices=get_local_vpn_ip_choices(),
-        description="Local VPN IP",
         label="Local VPN IP",
         required=True,
     )
