@@ -52,7 +52,7 @@ def get_customer_21_subnet_choices():
     return available_subnets
 
 
-def get_new_vpn_ip():
+def get_local_vpn_ip_choices():
     tag = Tag.objects.get(slug='active-customer-openvpn-ip')
     tagged_prefix = Prefix.objects.filter(tags__in=[tag]).first()
 
@@ -70,7 +70,7 @@ def get_new_vpn_ip():
         return None
 
     new_ip = next(iter(available_ips))
-    return str(new_ip)
+    return [(str(new_ip), str(new_ip))]
 
 
 class S0011_Exist_Customer_New_Office_Mikrotik(Script):
@@ -107,11 +107,11 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         required=False
     )
 
-    local_vpn_ip = StringVar(
+    local_vpn_ip = ChoiceVar(
+        choices=get_local_vpn_ip_choices(),
         description="Local VPN IP",
         label="Local VPN IP",
         required=True,
-        default=get_new_vpn_ip()
     )
 
     customer_cloud_firewall_interface_list_name = StringVar(
