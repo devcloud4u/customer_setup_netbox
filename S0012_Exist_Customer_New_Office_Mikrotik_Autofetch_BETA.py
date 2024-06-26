@@ -107,7 +107,7 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
     )
 
     customer_cloud_firewall_interface_list_name = ObjectVar(
-        model=Tenant.custom_fields['cloud_mikrotik_interface_list_name'],
+        model=Tenant,
         description="Pls Check on Cloud Mikrotik 'Interfaces' --> 'Interface List' and find customer name",
         label="Customer Cloud Firewall Interface List name",
         required=True,
