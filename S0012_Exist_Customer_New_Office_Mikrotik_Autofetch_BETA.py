@@ -104,7 +104,7 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         description="Pls Check on Cloud Mikrotik 'Interfaces' --> 'Interface List' and find customer name",
         label="Customer Cloud Firewall Interface List name",
         required=True,
-        context={'label': 'masood', 'sub_label': 'tenant__name'},
+        context={'label': 'tenant', 'sub_label': 'tenant__name'},
         query_params={
             'id': '$tenant'
         }
