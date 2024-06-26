@@ -65,9 +65,9 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         model=Prefix,
         label="Customer 21 Subnet",
         required=True,
-        query_params={
-            'tag': 'active-customer-office-subnet'
-        }
+        # query_params={
+        #     'tag': 'active-customer-office-subnet'
+        # }
     )
 
     local_vpn_ip = StringVar(
@@ -88,30 +88,30 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         required=True
     )
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields.customer_21_subnet.query_params = self.prepare()
-
-    def prepare(self):
-        # Get the tag and find all prefixes tagged with it
-        tag = Tag.objects.get(slug='active-customer-office-subnet')
-        tagged_prefixes = Prefix.objects.filter(tags__in=[tag])
-        available_subnets = []
-
-        # For each tagged prefix, find available /21 subnets within it
-        for tagged_prefix in tagged_prefixes:
-            prefix_set = netaddr.IPSet([tagged_prefix.prefix])
-            child_prefixes_set = netaddr.IPSet([child.prefix for child in tagged_prefix.get_child_prefixes()])
-            available_prefixes = prefix_set - child_prefixes_set
-
-            for subnet in available_prefixes.iter_cidrs():
-                if subnet.prefixlen == 21:
-                    available_subnets.append(str(subnet))
-
-        # Set the query_params for customer_21_subnet
-        return {
-            'prefix__in': available_subnets
-        }
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
+    #     self.fields.customer_21_subnet.query_params = self.prepare()
+    #
+    # def prepare(self):
+    #     # Get the tag and find all prefixes tagged with it
+    #     tag = Tag.objects.get(slug='active-customer-office-subnet')
+    #     tagged_prefixes = Prefix.objects.filter(tags__in=[tag])
+    #     available_subnets = []
+    #
+    #     # For each tagged prefix, find available /21 subnets within it
+    #     for tagged_prefix in tagged_prefixes:
+    #         prefix_set = netaddr.IPSet([tagged_prefix.prefix])
+    #         child_prefixes_set = netaddr.IPSet([child.prefix for child in tagged_prefix.get_child_prefixes()])
+    #         available_prefixes = prefix_set - child_prefixes_set
+    #
+    #         for subnet in available_prefixes.iter_cidrs():
+    #             if subnet.prefixlen == 21:
+    #                 available_subnets.append(str(subnet))
+    #
+    #     # Set the query_params for customer_21_subnet
+    #     return {
+    #         'prefix__in': available_subnets
+    #     }
 
     @staticmethod
     def validate_and_format_subnet_base(ip_base):
