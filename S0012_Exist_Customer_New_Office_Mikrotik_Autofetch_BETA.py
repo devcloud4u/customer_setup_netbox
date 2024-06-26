@@ -115,8 +115,8 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
 
         tenant = self.tenant
         if tenant:
-            self.fields['customer_cloud_firewall_interface_list_name'].initial = tenant.customer_cloud_firewall_interface_list_name
-            self.fields['customer_address_list_name_in_cloud_mikrotik'].initial = tenant.customer_address_list_name_in_cloud_mikrotik
+            self.customer_cloud_firewall_interface_list_name.default = tenant.customer_cloud_firewall_interface_list_name
+            self.customer_address_list_name_in_cloud_mikrotik.initial = tenant.customer_address_list_name_in_cloud_mikrotik
 
 
     @staticmethod
