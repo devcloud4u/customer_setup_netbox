@@ -90,7 +90,7 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields.customer_21_subnet.query_params = self.prepare()
+        self.customer_21_subnet.query_params = self.prepare()
 
     def prepare(self):
         # Get the tag and find all prefixes tagged with it
