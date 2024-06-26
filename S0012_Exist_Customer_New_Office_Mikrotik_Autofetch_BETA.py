@@ -165,7 +165,7 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         return str(ip + count)
 
     def run(self, data, commit):
-        self.log_info(f"self.local_vpn_ip.default: {self.local_vpn_ip.default}")
+        self.log_info(f"self.local_vpn_ip.default: {dir(self.local_vpn_ip)}")
         tenant = data['tenant']
         site = data['site']
         customer_office_place = data['customer_office_place']
