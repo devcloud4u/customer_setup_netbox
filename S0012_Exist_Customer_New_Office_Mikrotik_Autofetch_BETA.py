@@ -62,9 +62,10 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
     )
 
     customer_21_subnet = ChoiceVar(
+        choices=[],
+        description="Customer 21 subnet",
         label="Customer 21 Subnet",
-        required=True,
-        choices=[]
+        required=True
     )
 
     local_vpn_ip = StringVar(
