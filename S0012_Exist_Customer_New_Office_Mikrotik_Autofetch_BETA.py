@@ -107,7 +107,7 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
     local_vpn_ip = ChoiceVar(
         choices=get_local_vpn_ip_choices(),
         label="Local VPN IP",
-        required=True,
+        required=False,
     )
 
     customer_cloud_firewall_interface_list_name = StringVar(
@@ -162,6 +162,28 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
 
     def run(self, data, commit):
         self.log_info(f"self.local_vpn_ip.default: {dir(self.local_vpn_ip)}")
+        tag = Tag.objects.get(slug='active-customer-openvpn-ip')
+        tagged_prefix = Prefix.objects.filter(tags__in=[tag]).first()
+        self.log_info(f"tagged_prefix: {tagged_prefix}")
+
+        if not tagged_prefix:
+            return []
+
+        ip_set = netaddr.IPSet(tagged_prefix.prefix)
+        used_ips = netaddr.IPSet(IPAMIPAddress.objects.filter(
+            address__net_contained_or_equal=str(tagged_prefix.prefix)
+        ).values_list('address', flat=True))
+        self.log_info(f"used_ips: {used_ips}")
+
+        available_ips = ip_set - used_ips
+        self.log_info(f"available_ips: {available_ips}")
+
+        if not available_ips:
+            return []
+
+        new_ip = next(iter(available_ips))
+        self.log_info(f"new_ip: {new_ip}")
+        list_of_one_ip = [(str(new_ip), str(new_ip))]
         tenant = data['tenant']
         site = data['site']
         customer_office_place = data['customer_office_place']
