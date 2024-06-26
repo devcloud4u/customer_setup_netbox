@@ -48,26 +48,14 @@ def get_customer_21_subnet_choices():
     return available_subnets
 
 
-def get_local_vpn_ip_choices():
+def get_local_vpn_ip():
     tag = Tag.objects.get(slug='active-customer-openvpn-ip')
     tagged_prefix = Prefix.objects.filter(tags__in=[tag]).first()
 
     if not tagged_prefix:
         return []
 
-    ip_set = netaddr.IPSet(tagged_prefix.prefix)
-    used_ips = netaddr.IPSet(IPAMIPAddress.objects.filter(
-        address__net_contained_or_equal=str(tagged_prefix.prefix)
-    ).values_list('address', flat=True))
-
-    available_ips = ip_set - used_ips
-
-    if not available_ips:
-        return []
-
-    new_ip = next(iter(available_ips))
-    list_of_one_ip = [(str(new_ip), str(new_ip))]
-    return list_of_one_ip
+    return tagged_prefix.get_first_available_ip()
 
 
 class S0011_Exist_Customer_New_Office_Mikrotik(Script):
@@ -104,8 +92,8 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         required=True
     )
 
-    local_vpn_ip = ChoiceVar(
-        choices=get_local_vpn_ip_choices(),
+    local_vpn_ip = StringVar(
+        default=get_local_vpn_ip(),
         label="Local VPN IP",
         required=False,
     )
@@ -161,29 +149,6 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         return str(ip + count)
 
     def run(self, data, commit):
-        self.log_info(f"self.local_vpn_ip.default: {dir(self.local_vpn_ip)}")
-        tag = Tag.objects.get(slug='active-customer-openvpn-ip')
-        tagged_prefix = Prefix.objects.filter(tags__in=[tag]).first()
-
-        if not tagged_prefix:
-            return []
-
-        used_ips = tagged_prefix.get_first_available_ip()
-        self.log_info(f"used_ips: {used_ips}")
-        used_ip_set = netaddr.IPSet([ip.address.ip for ip in used_ips])
-        self.log_info(f"used_ip_set: {used_ip_set}")
-        ip_set = netaddr.IPSet(tagged_prefix.prefix)
-        self.log_info(f"ip_set: {ip_set}")
-
-        available_ips = ip_set - used_ip_set
-        self.log_info(f"available_ips: {available_ips}")
-
-        if not available_ips:
-            return []
-
-        new_ip = next(iter(available_ips))
-        self.log_info(f"new_ip: {str(new_ip)}")
-
         tenant = data['tenant']
         site = data['site']
         customer_office_place = data['customer_office_place']
