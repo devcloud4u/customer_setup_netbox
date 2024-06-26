@@ -105,7 +105,7 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         label="Customer Cloud Firewall Interface List name",
         required=True,
         query_params={
-            'tenant_id': '$tenant -> cloud_mikrotik_interface_list_name'
+            'tenant_id': '$tenant.cloud_mikrotik_interface_list_name'
         }
     )
 
