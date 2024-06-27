@@ -43,7 +43,8 @@ def get_customer_21_subnet_choices():
         available_prefixes = prefix_set - child_prefixes_set
 
         for subnet in available_prefixes.iter_cidrs():
-            if subnet.prefixlen == 21:
+            if subnet.prefixlen <= 21:
+                return str(subnet)
                 available_subnets.append((str(subnet), str(subnet)))
 
     return available_subnets
@@ -87,8 +88,8 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         required=True
     )
 
-    customer_21_subnet = ChoiceVar(
-        choices=get_customer_21_subnet_choices(),
+    customer_21_subnet = StringVar(
+        default=get_customer_21_subnet_choices(),
         label="Customer 21 Subnet",
         required=True
     )
