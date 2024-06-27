@@ -60,7 +60,7 @@ def get_local_vpn_ip():
     return tagged_prefix.get_first_available_ip()
 
 
-class S0011_Exist_Customer_New_Office_Mikrotik(Script):
+class S0012_Exist_Customer_New_Office_Mikrotik_Autofetch_BETA(Script):
     class Meta:
         name = "S0011 Exist Customer New Office Mikrotik"
         description = "Script with custom fields for tenant selection and additional customer information"
@@ -663,4 +663,4 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
         self.log_success("Script completed successfully.")
 
 
-script = S0011_Exist_Customer_New_Office_Mikrotik
+script = S0012_Exist_Customer_New_Office_Mikrotik_Autofetch_BETA
