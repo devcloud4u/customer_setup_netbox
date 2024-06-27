@@ -1,5 +1,26 @@
-# Search tenant
-# rest same as new
+# script version = 3
+## reset code
+## /system reset-configuration no-defaults=yes run-after-reset=flash/save.rsc
+## extra info https://github.com/AlexDerugo/backup_mikrotik_from_netbox/blob/main/routers-backup.py
+
+#### Fill the form
+# Customer Full name = Tenant name ** slugs outomaticsh
+# Customer Short Name =  1 word of customer without space
+# Customer Office Place = Site name  ( 1 word without space)
+# Customer Cloud vLan id = Get form vcenter manualy (user should get and enter)
+# Customer 21 subnet = Get automaticaly form netbox and show (user can edit) (give also a link to prefix with new tab open option)
+    # Search in prefixes /13 subnets with UTILIZATION status != 100% and role = "Customer Office" and status = Container (if this If this is too difficult let me know, there is another way in my mind that is much simpler. but this way is more automatic.)
+    # in this /13 subnet check avaible child prefixes minimum availble prefix /21
+# Cloud Mikrotik ip
+    #   Get a list of ip addresses Filter ( Get all ip addresses with ip Role = CARP)
+    #   use this in vairable :global OpenVPNCloudFirewallIPorHost "95.211.35.162"  (without /subnet)
+# OpenVPN ip
+    # get list of ip's filter ( )
+    # set Tenant Group = Customers   and Tenant = Customer tenant
+
+#### steps
+
+
 import random
 import netaddr
 from extras.scripts import Script, StringVar, IntegerVar, ObjectVar, ChoiceVar, BooleanVar
@@ -32,6 +53,40 @@ def generate_password(length=20):
     return ''.join(password)
 
 
+def increment_last_octet(ip_base, count):
+    ip = IPAddress(ip_base)
+    return str(ip + count)
+
+
+def increment_subnet(ip_base, increment, subnet_mask):
+    network = IPNetwork(f"{ip_base}/{subnet_mask}")
+    new_network = network.next(increment)
+    return str(new_network.network)
+
+
+def format_vlan_id(vlan_id):
+    vlan_number = int(vlan_id)
+    if vlan_number > 254:
+        raise ValueError("VLAN can be a maximum of 254. Please enter a VLAN less than 254.")
+    return str(vlan_number).zfill(4)
+
+
+def align_to_subnet(ip_base, mask):
+    network = IPNetwork(f"{ip_base}/{mask}")
+    return str(network.network)
+
+
+def validate_and_format_subnet_base(ip_base):
+    parts = ip_base.split('.')
+    if len(parts) < 4:
+        parts += ['0'] * (4 - len(parts))
+    if len(parts) != 4:
+        raise ValueError("Invalid subnet base. Please provide a base in the format X.X.X.0")
+    if int(parts[-1]) != 0:
+        raise ValueError("The last octet of the subnet base should be 0 (e.g., '10.201.16.0')")
+    return '.'.join(parts)
+
+
 def get_customer_21_subnet_choices():
     tag = Tag.objects.get(slug='active-customer-office-subnet')
     tagged_prefixes = Prefix.objects.filter(tags__in=[tag])
@@ -60,34 +115,28 @@ def get_local_vpn_ip():
     return tagged_prefix.get_first_available_ip()
 
 
-class S0012_Exist_Customer_New_Office_Mikrotik_Autofetch_BETA(Script):
+class S0010_New_Customer_New_Office_with_Cloud_Desktop_V2(Script):
     class Meta:
-        name = "S0012 Exist Customer New Office Mikrotik Autofetch BETA"
-        description = "Script with custom fields for tenant selection and additional customer information"
+        name = "S0010 New Customer New Office with Cloud Desktop V2"
+        description = "Sets up tenant, sites, VLANs, and prefixes for a new customer"
+        commit_default = True
 
-    tenant = ObjectVar(
-        model=Tenant,
-        label="Select Customer Tenant",
-        description="New Office Site will be created below this Tenant",
-        required=True
+    customer_full_name = StringVar(
+        description="Customer Full Name (e.g., 'Ali Transport')",
+        default="Ali Transport"
     )
-
-    site = ObjectVar(
-        model=Site,
-        label="Select Customer Cloud Site",
-        description="Cloud Mikrotik Config will be pushed on this site",
-        required=True,
-        query_params={
-            'tenant_id': '$tenant'
-        }
+    customer_short_name = StringVar(
+        description="Customer Short Name (e.g., 'Ali')",
+        default="Ali"
     )
-
     customer_office_place = StringVar(
-        description="Customer Office Place or Street",
-        label="Customer Office Place",
-        required=True
+        description="Customer Office Place (e.g., 'Istanbul')",
+        default="Istanbul"
     )
-
+    customer_cloud_vlanid = IntegerVar(
+        description="Customer Cloud VLAN ID (e.g., '10')",
+        default=10
+    )
     customer_21_subnet = StringVar(
         default=get_customer_21_subnet_choices(),
         label="Customer 21 Subnet",
@@ -102,33 +151,6 @@ class S0012_Exist_Customer_New_Office_Mikrotik_Autofetch_BETA(Script):
         required=True,
     )
 
-    customer_cloud_firewall_interface_list_name_automatically = BooleanVar(
-        description="Pls Check on Organization -> Tenants -> Customer -> Cloud Mikrotik Interface List name (Custom Fields)",
-        label="Get Customer Cloud Firewall Interface List name automatically",
-        required=True,
-        default=True
-    )
-
-    customer_cloud_firewall_interface_list_name = StringVar(
-        description="Pls Check on Cloud Mikrotik 'Interfaces' --> 'Interface List' and find customer name",
-        label="Customer Cloud Firewall Interface List name",
-        required=False,
-    )
-
-    customer_address_list_name_in_cloud_mikrotik_automatically = BooleanVar(
-        description="Pls Check on Organization -> Tenants -> Customer -> Cloud Mikrotik IP Address List (Custom Fields)",
-        label="Get Customer Address List Name in Cloud Mikrotik automatically",
-        required=True,
-        default=True
-    )
-
-    customer_address_list_name_in_cloud_mikrotik = StringVar(
-        description="Pls check on Cloud Mikrotik 'IP' --> 'Firewall' --> 'Address List' and find customer address list name like 0078-Cova",
-        label="Customer Address List Name in Cloud Mikrotik",
-        required=False
-    )
-
-    @staticmethod
     def validate_and_format_subnet_base(ip_base):
         # Strip the subnet mask if present
         if '/' in ip_base:
@@ -143,60 +165,33 @@ class S0012_Exist_Customer_New_Office_Mikrotik_Autofetch_BETA(Script):
             raise ValueError("The last octet of the subnet base should be 0 (e.g., '10.201.16.0')")
         return '.'.join(parts)
 
-    @staticmethod
-    def align_to_subnet(ip_base, mask):
-        network = IPNetwork(f"{ip_base}/{mask}")
-        return str(network.network)
-
-    @staticmethod
-    def format_vlan_id(vlan_id):
-        vlan_number = int(vlan_id)
-        if vlan_number > 254:
-            raise ValueError("VLAN can be a maximum of 254. Please enter a VLAN less than 254.")
-        return str(vlan_number).zfill(4)
-
-    @staticmethod
-    def increment_subnet(ip_base, increment, subnet_mask):
-        network = IPNetwork(f"{ip_base}/{subnet_mask}")
-        new_network = network.next(increment)
-        return str(new_network.network)
-
-    @staticmethod
-    def increment_last_octet(ip_base, count):
-        ip = IPAddress(ip_base)
-        return str(ip + count)
-
     def run(self, data, commit):
         try:
-            cloud_site = data['site']
-            tenant = data['tenant']
-            local_vpn_ip = data['local_vpn_ip']
-            customer_cloud_firewall_interface_list_name_automatically = data['customer_cloud_firewall_interface_list_name_automatically']
-            customer_cloud_firewall_interface_list_name = data['customer_cloud_firewall_interface_list_name']
-            customer_address_list_name_in_cloud_mikrotik_automatically = data['customer_address_list_name_in_cloud_mikrotik_automatically']
-            customer_address_list_name_in_cloud_mikrotik = data['customer_address_list_name_in_cloud_mikrotik']
-
-            vlan = VLAN.objects.filter(site=cloud_site).first()
-            cloud_vlan_id = vlan.vid
-            cloud_vlan_name = self.format_vlan_id(cloud_vlan_id)
-            customer_short_name = cloud_site.name.split(' ')[0]
             self.log_info(f"Customer /21 Subnet: {data['customer_21_subnet']}")
-            validated_subnet_base = self.validate_and_format_subnet_base(data['customer_21_subnet'])
+            validated_subnet_base = validate_and_format_subnet_base(data['customer_21_subnet'])
             self.log_info(f"Validated Subnet Base: {validated_subnet_base}")
 
-            self.log_info(f"Tenant 'retrieved': {tenant.name}")
-
-            office_site_name = f"{customer_short_name} {data['customer_office_place']}"
-            office_site_slug = slugify(office_site_name)
-            office_site, created = Site.objects.get_or_create(
-                name=office_site_name,
-                slug=office_site_slug,
-                tenant=tenant,
+            tenant_group, created = TenantGroup.objects.get_or_create(name='Customers')
+            tenant_slug = slugify(data['customer_full_name'])
+            tenant, created = Tenant.objects.get_or_create(
+                name=data['customer_full_name'],
+                slug=tenant_slug,
+                group=tenant_group
             )
+            self.log_info(f"Tenant {'created' if created else 'retrieved'}: {tenant.name}")
 
+            office_site_name = f"{data['customer_short_name']} {data['customer_office_place']}"
+            office_site_slug = slugify(office_site_name)
+            office_site, created = Site.objects.get_or_create(name=office_site_name, slug=office_site_slug,
+                                                              tenant=tenant)
             self.log_info(f"Office site {'created' if created else 'retrieved'}: {office_site.name}")
 
-            aligned_office_prefix_base = self.align_to_subnet(validated_subnet_base, 21)
+            cloud_site_name = f"{data['customer_short_name']} Cloud"
+            cloud_site_slug = slugify(cloud_site_name)
+            cloud_site, created = Site.objects.get_or_create(name=cloud_site_name, slug=cloud_site_slug, tenant=tenant)
+            self.log_info(f"Cloud site {'created' if created else 'retrieved'}: {cloud_site.name}")
+
+            aligned_office_prefix_base = align_to_subnet(validated_subnet_base, 21)
             office_prefix_str = f"{aligned_office_prefix_base}/21"
             self.log_info(f"Office Prefix: {office_prefix_str}")
             office_prefix, created = Prefix.objects.get_or_create(
@@ -208,8 +203,28 @@ class S0012_Exist_Customer_New_Office_Mikrotik_Autofetch_BETA(Script):
             )
             self.log_info(f"/21 prefix for office site {'created' if created else 'retrieved'}: {office_prefix.prefix}")
 
+            cloud_vlan_id = int(data['customer_cloud_vlanid'])
+            cloud_vlan_name = format_vlan_id(data['customer_cloud_vlanid'])
+            cloud_vlan, created = VLAN.objects.get_or_create(
+                vid=cloud_vlan_id,
+                name=cloud_vlan_name,
+                site=cloud_site,
+                tenant=tenant
+            )
+            self.log_info(f"Cloud VLAN {'created' if created else 'retrieved'}: {cloud_vlan.name}")
+
+            cloud_prefix_str = f"10.0.{cloud_vlan_id}.0/24"
+            self.log_info(f"Cloud Prefix: {cloud_prefix_str}")
+            cloud_prefix, created = Prefix.objects.get_or_create(
+                prefix=cloud_prefix_str,
+                site=cloud_site,
+                vlan=cloud_vlan,
+                tenant=tenant
+            )
+            self.log_info(f"Cloud prefix {'created' if created else 'retrieved'}: {cloud_prefix.prefix}")
+
             base_ip = aligned_office_prefix_base
-            subnet_addresses = [self.increment_subnet(base_ip, i, 24) for i in range(5)]
+            subnet_addresses = [increment_subnet(base_ip, i, 24) for i in range(5)]
             self.log_info(f"Subnet Addresses: {subnet_addresses}")
 
             vlans = [
@@ -242,29 +257,16 @@ class S0012_Exist_Customer_New_Office_Mikrotik_Autofetch_BETA(Script):
             )
             self.log_info(f"Infra prefix {'created' if created else 'retrieved'}: {infra_prefix.prefix}")
 
-            password = generate_password(20)
-            openvpn_password = generate_password(20)
-
             # Create the new IPAddress object and save it
             ip_address = IPAMIPAddress(
-                address=f"{local_vpn_ip}",
+                address=f"{data['local_vpn_ip']}",
                 tenant=tenant,
                 status="active",
             )
             ip_address.save()
             self.log_info(f"local vpn ip_address created: {ip_address}")
 
-            if customer_cloud_firewall_interface_list_name_automatically:
-                customer_cloud_firewall_interface_list_name = tenant.custom_field_data.get('cloud_mikrotik_interface_list_name')
-                self.log_info(f"customer_cloud_firewall_interface_list_name received: {customer_cloud_firewall_interface_list_name}")
-                if not customer_cloud_firewall_interface_list_name:
-                    raise ValueError("cloud_mikrotik_interface_list_name must be defined in tenant")
-
-            if customer_address_list_name_in_cloud_mikrotik_automatically:
-                customer_address_list_name_in_cloud_mikrotik = tenant.custom_field_data.get('cloud_mikrotik_ip_address_list')
-                self.log_info(f"customer_address_list_name_in_cloud_mikrotik received: {customer_address_list_name_in_cloud_mikrotik}")
-                if not customer_address_list_name_in_cloud_mikrotik:
-                    raise ValueError("cloud_mikrotik_ip_address_list must be defined in tenant")
+            password = generate_password(20)
 
             save_password_template = f"""
 passbolt please save this
@@ -275,104 +277,45 @@ password: {password}
 
 Office mikrotik code to copy paste
 ======
+                """
 
-            """
-            cloud_template = f'''
-# This is for Mikrotik Cloud to add new OpenVPN to Customer Office mikrotik
-# For Office: "{customer_short_name}-{data['customer_office_place']}-Office"
-
-# Info
-#################
-# $CustomerInterfaceList = ask from user
-# name: Customer Cloud Firewall  Interface List name:
-# tip: Pls Check on Cloud Mikrotik "Interfaces" --> "Interface List" and find customer name
-
-# $CustomerAdresList = ask from user
-# name: Customer Address List Name in Cloud Mikrotik:
-# tip: Pls chek on Cloud Mikrotik "IP" --> "Firewall" --> "Address List" and find customer adres list name like 0078-Cova
-
-# $customer_office_place  get from user
-# name: Customer Office Name
-# tip: Customer Office Place or Street
-
-# $customer_short_name Get fro Cloud Office Site
-# $OpenVPNCloudUsername generated on Office Site
-# en info
-#########
-
-# Generate for Journal in Customer Cloud Side
-###########
-# only Cloud Server Side variables
-:global OpenVPNServerInterfaceName "OpenVPN_{customer_short_name}-{data['customer_office_place']}-Office"
-:global CustomerFirewallRuleComment "{customer_short_name} to {customer_short_name}"
-:global CustomerInterfaceList "{customer_cloud_firewall_interface_list_name}"
-:global CustomerAdresList "{customer_address_list_name_in_cloud_mikrotik}"
-:global CustomerOfficeBigSubnet "{base_ip}/21"
-:global OpenVPNLocalIP "{local_vpn_ip}"
-:global OpenVPNCloudUsername "{customer_short_name}-{data['customer_office_place']}-Office"
-:global OpenVPNCloudPassword "{openvpn_password}"
-
-# static variables
-:global OpenVPNProfileName "OpenVPN_Profile"
-
-
-# create openvpn interface
-/interface ovpn-server add name=$OpenVPNServerInterfaceName user=$OpenVPNCloudUsername
-# add openvpn interface to customer list
-/interface list member add interface=$OpenVPNServerInterfaceName list=$CustomerInterfaceList
-
-# ip firewall
-# add vpn interface ip to customer
-/ip firewall address-list add address=$OpenVPNLocalIP list=$CustomerAdresList
-# add big Office subnet
-/ip firewall address-list add address=$CustomerOfficeBigSubnet list=$CustomerAdresList
-
-
-# Create openvpn
-/ppp secret
-add name=$OpenVPNCloudUsername password=$OpenVPNCloudPassword profile=$OpenVPNProfileName remote-address=$OpenVPNLocalIP routes=$CustomerOfficeBigSubnet service=ovpn
-
-# firewall rule
-/ip firewall filter add action=accept chain=forward comment=$CustomerFirewallRuleComment connection-state=new dst-address-list=$CustomerAdresList in-interface-list=$CustomerInterfaceList out-interface-list=$CustomerInterfaceList src-address-list=$CustomerAdresList place-before=10
-            '''
             # Create the script template with generated variables and settings
             script_template = f"""
-
-:global NameDevice "{customer_short_name}-{data['customer_office_place']}-Office"
+:global NameDevice "{data['customer_short_name']}-{data['customer_office_place']}-Office"
 :global AdminPassword "{password}"
 :global DnsServers "8.8.8.8,8.8.4.4,1.1.1.1"
 
 :global CustomerOfficeBigSubnet "{base_ip}/21"
 
-:global InfraGWIp "{self.increment_last_octet(subnet_addresses[0], 1)}"
-:global InfraIp "{self.increment_last_octet(subnet_addresses[0], 1)}/24"
-:global InfraIpNetwork "{self.increment_last_octet(subnet_addresses[0], 0)}"
-:global InfraIpSubnet "{self.increment_last_octet(subnet_addresses[0], 0)}/24"
-:global PoolInfra "{self.increment_last_octet(subnet_addresses[0], 99)}-{self.increment_last_octet(subnet_addresses[0], 253)}"
+:global InfraGWIp "{increment_last_octet(subnet_addresses[0], 1)}"
+:global InfraIp "{increment_last_octet(subnet_addresses[0], 1)}/24"
+:global InfraIpNetwork "{increment_last_octet(subnet_addresses[0], 0)}"
+:global InfraIpSubnet "{increment_last_octet(subnet_addresses[0], 0)}/24"
+:global PoolInfra "{increment_last_octet(subnet_addresses[0], 99)}-{increment_last_octet(subnet_addresses[0], 253)}"
 
-:global OfficeGWIp "{self.increment_last_octet(subnet_addresses[1], 1)}"
-:global OfficeIp "{self.increment_last_octet(subnet_addresses[1], 1)}/24"
-:global OfficeIpNetwork "{self.increment_last_octet(subnet_addresses[1], 0)}"
-:global OfficeIpSubnet "{self.increment_last_octet(subnet_addresses[1], 0)}/24"
-:global PoolOffice "{self.increment_last_octet(subnet_addresses[1], 99)}-{self.increment_last_octet(subnet_addresses[1], 253)}"
+:global OfficeGWIp "{increment_last_octet(subnet_addresses[1], 1)}"
+:global OfficeIp "{increment_last_octet(subnet_addresses[1], 1)}/24"
+:global OfficeIpNetwork "{increment_last_octet(subnet_addresses[1], 0)}"
+:global OfficeIpSubnet "{increment_last_octet(subnet_addresses[1], 0)}/24"
+:global PoolOffice "{increment_last_octet(subnet_addresses[1], 99)}-{increment_last_octet(subnet_addresses[1], 253)}"
 
-:global VoipGWIp "{self.increment_last_octet(subnet_addresses[2], 1)}"
-:global VoipIp "{self.increment_last_octet(subnet_addresses[2], 1)}/24"
-:global VoipIpNetwork "{self.increment_last_octet(subnet_addresses[2], 0)}"
-:global VoipIpSubnet "{self.increment_last_octet(subnet_addresses[2], 0)}/24"
-:global PoolVoip "{self.increment_last_octet(subnet_addresses[2], 99)}-{self.increment_last_octet(subnet_addresses[2], 253)}"
+:global VoipGWIp "{increment_last_octet(subnet_addresses[2], 1)}"
+:global VoipIp "{increment_last_octet(subnet_addresses[2], 1)}/24"
+:global VoipIpNetwork "{increment_last_octet(subnet_addresses[2], 0)}"
+:global VoipIpSubnet "{increment_last_octet(subnet_addresses[2], 0)}/24"
+:global PoolVoip "{increment_last_octet(subnet_addresses[2], 99)}-{increment_last_octet(subnet_addresses[2], 253)}"
 
-:global SecurityGWIp "{self.increment_last_octet(subnet_addresses[3], 1)}"
-:global SecurityIp "{self.increment_last_octet(subnet_addresses[3], 1)}/24"
-:global SecurityIpNetwork "{self.increment_last_octet(subnet_addresses[3], 0)}"
-:global SecurityIpSubnet "{self.increment_last_octet(subnet_addresses[3], 0)}/24"
-:global PoolSecurity "{self.increment_last_octet(subnet_addresses[3], 99)}-{self.increment_last_octet(subnet_addresses[3], 253)}"
+:global SecurityGWIp "{increment_last_octet(subnet_addresses[3], 1)}"
+:global SecurityIp "{increment_last_octet(subnet_addresses[3], 1)}/24"
+:global SecurityIpNetwork "{increment_last_octet(subnet_addresses[3], 0)}"
+:global SecurityIpSubnet "{increment_last_octet(subnet_addresses[3], 0)}/24"
+:global PoolSecurity "{increment_last_octet(subnet_addresses[3], 99)}-{increment_last_octet(subnet_addresses[3], 253)}"
 
-:global GuestGWIp "{self.increment_last_octet(subnet_addresses[4], 1)}"
-:global GuestIp "{self.increment_last_octet(subnet_addresses[4], 1)}/24"
-:global GuestIpNetwork "{self.increment_last_octet(subnet_addresses[4], 0)}"
-:global GuestIpSubnet "{self.increment_last_octet(subnet_addresses[4], 0)}/24"
-:global PoolGuest "{self.increment_last_octet(subnet_addresses[4], 99)}-{self.increment_last_octet(subnet_addresses[4], 253)}"
+:global GuestGWIp "{increment_last_octet(subnet_addresses[4], 1)}"
+:global GuestIp "{increment_last_octet(subnet_addresses[4], 1)}/24"
+:global GuestIpNetwork "{increment_last_octet(subnet_addresses[4], 0)}"
+:global GuestIpSubnet "{increment_last_octet(subnet_addresses[4], 0)}/24"
+:global PoolGuest "{increment_last_octet(subnet_addresses[4], 99)}-{increment_last_octet(subnet_addresses[4], 253)}"
 
 # static variables
 :global OpenVPNProfileName "OpenVPN_Profile"
@@ -382,21 +325,22 @@ add name=$OpenVPNCloudUsername password=$OpenVPNCloudPassword profile=$OpenVPNPr
 
 # Cloud Server and Client Office side variables
 :global OpenVPNCloudFirewallIPorHost "95.211.35.162"
-:global OpenVPNCloudUsername "{customer_short_name}-{data['customer_office_place']}-Office"
-:global OpenVPNCloudPassword {openvpn_password}
-:global OpenVPNLocalIP "{local_vpn_ip}"
+:global OpenVPNCloudUsername "{data['customer_short_name']}-{data['customer_office_place']}-Office"
+:global OpenVPNCloudPassword "{generate_password(20)}"
+:global OpenVPNLocalIP "{data['local_vpn_ip']}"
+:global OpenVPNOfficeSubnets "{aligned_office_prefix_base}/21"
 
 # only Cloud Server Side variables
-:global CustomerAdresList "{cloud_vlan_name}-{customer_short_name}"
-:global CustomerCloudSubnet "10.0.{cloud_vlan_id}.0/24"
-:global CustomerCloudSubnetComment "{customer_short_name} Cloud Subnet"
-:global CustomerInterfaceList "{customer_short_name}"
-:global CustomerFirewallRuleComment "{customer_short_name} to {customer_short_name}"
-:global OpenVPNServerInterfaceName "OpenVPN_{customer_short_name}-{data['customer_office_place']}-Office"
-:global ClientVLanInterfaceName "VLan-{cloud_vlan_name}-{customer_short_name}-Cloud"
-:global ClientVLanID "{cloud_vlan_id}"
-
-
+:global CustomerAdresList "{cloud_vlan_name}-{data['customer_short_name']}"
+:global CustomerCloudSubnet "10.0.{data['customer_cloud_vlanid']}.0/24"
+:global CustomerCloudSubnetComment "{data['customer_short_name']} Cloud Subnet"
+:global CustomerInterfaceList "{data['customer_short_name']}"
+:global CustomerFirewallRuleComment "{data['customer_short_name']} to {data['customer_short_name']}"
+:global OpenVPNServerInterfaceName "OpenVPN_{data['customer_short_name']}-{data['customer_office_place']}-Office"
+:global ClientVLanInterfaceName "VLan-{cloud_vlan_name}-{data['customer_short_name']}-Cloud"
+:global ClientVLanID "{data['customer_cloud_vlanid']}"
+                """
+            office_site_template = '''
 ### reset to factory
 #/system reset-configuration no-defaults=yes skip-backup=yes
 
@@ -406,7 +350,7 @@ add name=$OpenVPNCloudUsername password=$OpenVPNCloudPassword profile=$OpenVPNPr
 #/interface ethernet reset-mac-address
 
 ### template without voipmax
-### System Name
+### System Name 
 /system identity set name=$NameDevice
 
 ### Set Password
@@ -422,7 +366,7 @@ set [ find default-name=ether5 ] name=ether5
 
 ### OpenVPN Clients
 /interface ovpn-client
-# Add OpenVPN client for Ortimo VPN
+# Add OpenVPN client for Ortimo VPN 
 add connect-to=$OpenVPNCloudFirewallIPorHost name=$OpenVPNClientName password=$OpenVPNCloudPassword user=$OpenVPNCloudUsername
 
 ### Interface Bridge with VLAN Filtering
@@ -459,7 +403,7 @@ add name=Guest
 add name=WAN
 add name=Cloud
 
-# Add LAN interface including other interface lists
+# Add LAN interface including other interface lists 
 add include=Infra,Office,Security,VoIP,Guest name=LAN
 
 #### IP Pools
@@ -487,7 +431,7 @@ add address-pool=Pool_VoIP interface=VLAN_0030_Voip lease-time=1w name=DHCP_VoIP
 add address-pool=Pool_Security interface=VLAN_0040_Security lease-time=1w name=DHCP_Security
 add address-pool=Pool_Guest interface=VLAN_0090_Guest lease-time=1h name=DHCP_Guest
 
-### interface member lists
+### interface member lists	
 /interface list member
 add interface=ether1_Trunk_Switch list=Infra
 add interface=Bridge_Trunk list=Infra
@@ -501,7 +445,7 @@ add interface=ether2_WAN1 list=WAN
 #mybe not needed
 add interface=ether3_WAN2 list=WAN
 
-### dhcp client
+### dhcp client 
 /ip dhcp-client
 # main internet
 add add-default-route=yes default-route-distance=1 interface=ether2_WAN1
@@ -580,17 +524,17 @@ set ftp disabled=yes
 set api disabled=yes
 set api-ssl disabled=yes
 
-### ip services custom
+### ip services custom 
 /ip service
 set winbox port=35300
 set www port=8181
 set ssh port=2220
 
-### system settings
+### system settings 
 /system clock
 set time-zone-name=Europe/Amsterdam
 
-### time client
+### time client 
 /system ntp client
 set enabled=yes
 /system ntp client servers
@@ -623,7 +567,7 @@ set show-at-login=no
 #Securing Mikrotik
 /ip ssh set strong-crypto=yes forwarding-enabled=both
 
-# extra security
+# extra security 
 /tool mac-server mac-winbox set allowed-interface-list=LAN
 /tool mac-server ping set enabled=no
 /ip neighbor discovery-settings set discover-interface-list=LAN
@@ -637,9 +581,9 @@ set show-at-login=no
 # mikrotik mode change + give options
 /system/device-mode/update mode=enterprise scheduler=yes socks=yes fetch=yes pptp=yes l2tp=yes bandwidth-test=yes traffic-gen=yes sniffer=yes ipsec=yes romon=yes proxy=yes hotspot=yes smb=yes email=yes zerotier=yes container=yes
 # power off on physically in 5 min
-'''
+                '''
 
-cloud_site_template = '''
+            cloud_site_template = '''
 # Create vlan for customer subnet (Cloud vLan Interface)
 /interface vlan add interface=ether1-Trunk loop-protect=on name=$ClientVLanInterfaceName vlan-id=$ClientVLanID
 
@@ -647,7 +591,7 @@ cloud_site_template = '''
 /interface list add name=$CustomerInterfaceList
 /interface list add include=$CustomerInterfaceList name=Customers
 
-# create openvpn interface
+# create openvpn interface 
 /interface ovpn-server add name=$OpenVPNServerInterfaceName user=$OpenVPNCloudUsername
 # add openvpn interface to customer list
 /interface list member add interface=$OpenVPNServerInterfaceName list=$CustomerInterfaceList
@@ -663,30 +607,29 @@ cloud_site_template = '''
 # add customer cloud subnet to internet access list
 /ip firewall address-list add address=$CustomerCloudSubnet comment=$CustomerCloudSubnetComment list=CloudPC_Internet
 
-# Create openvpn
+# Create openvpn 
 /ppp secret
-add name=$OpenVPNCloudUsername password=$OpenVPNCloudPassword profile=$OpenVPNProfileName remote-address=$OpenVPNLocalIP routes=$CustomerOfficeBigSubnet service=ovpn
+add name=$OpenVPNCloudUsername password=$OpenVPNCloudPassword profile=$OpenVPNProfileName remote-address=$OpenVPNLocalIP routes=$OpenVPNOfficeSubnets service=ovpn
 
-# firewall rule
+# firewall rule 
 /ip firewall filter add action=accept chain=forward comment=$CustomerFirewallRuleComment connection-state=new dst-address-list=$CustomerAdresList in-interface-list=$CustomerInterfaceList out-interface-list=$CustomerInterfaceList src-address-list=$CustomerAdresList place-before=10
-            """
-
+                '''
             JournalEntry.objects.create(
                 assigned_object=office_site,
                 created_by=self.request.user,
-                comments=f'```\n{save_password_template}\n{script_template}\n```'
+                comments=f'```\n{save_password_template}\n{script_template}\n{office_site_template}\n```'
             )
-
             JournalEntry.objects.create(
                 assigned_object=cloud_site,
                 created_by=self.request.user,
-                comments=f'```\n{cloud_template}\n```'
+                comments=f'```\n{script_template}\n{cloud_site_template}\n```'
             )
+
+            self.log_success("Customer setup script completed successfully")
 
         except ValueError as e:
             self.log_failure(str(e))
 
-        self.log_success("Script completed successfully.")
 
+script = S0010_New_Customer_New_Office_with_Cloud_Desktop_V2
 
-script = S0012_Exist_Customer_New_Office_Mikrotik_Autofetch_BETA
