@@ -175,7 +175,7 @@ class S0012_Exist_Customer_New_Office_Mikrotik_Autofetch_BETA(Script):
         self.log_info(f"tenant.get_custom_fields: {tenant.get_custom_fields}")
         self.log_info(f"dir(tenant.get_custom_fields): {dir(tenant.get_custom_fields)}")
         self.log_info(f"type(tenant.get_custom_fields): {type(tenant.get_custom_fields)}")
-        self.log_info(f"tenant.get_custom_fields.get('cloud_mikrotik_interface_list_name'): {tenant.get_custom_fields.get('cloud_mikrotik_interface_list_name')}")
+        # self.log_info(f"tenant.get_custom_fields.get('cloud_mikrotik_interface_list_name'): {tenant.get_custom_fields.get('cloud_mikrotik_interface_list_name')}")
         self.log_info(f"tenant.custom_field_data: {tenant.custom_field_data}")
         self.log_info(f"dir(tenant.custom_field_data): {dir(tenant.custom_field_data)}")
         self.log_info(f"type(tenant.custom_field_data): {type(tenant.custom_field_data)}")
