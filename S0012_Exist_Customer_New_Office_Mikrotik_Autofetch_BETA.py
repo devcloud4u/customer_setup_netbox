@@ -57,7 +57,10 @@ def get_local_vpn_ip():
     if not tagged_prefix:
         return []
 
-    return tagged_prefix.get_first_available_ip()
+    first_available_ip = tagged_prefix.get_first_available_ip()
+
+    return str(first_available_ip.ip) if first_available_ip else None
+
 
 
 class S0012_Exist_Customer_New_Office_Mikrotik_Autofetch_BETA(Script):
