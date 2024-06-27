@@ -125,7 +125,7 @@ class S0012_Exist_Customer_New_Office_Mikrotik_Autofetch_BETA(Script):
     customer_address_list_name_in_cloud_mikrotik = StringVar(
         description="Pls check on Cloud Mikrotik 'IP' --> 'Firewall' --> 'Address List' and find customer address list name like 0078-Cova",
         label="Customer Address List Name in Cloud Mikrotik",
-        required=True
+        required=False
     )
 
     @staticmethod
