@@ -104,7 +104,7 @@ class S0012_Exist_Customer_New_Office_Mikrotik_Autofetch_BETA(Script):
 
     customer_cloud_firewall_interface_list_name_automatically = BooleanVar(
         description="Pls Check on Cloud Mikrotik 'Interfaces' --> 'Interface List' and find customer name",
-        label="Customer Cloud Firewall Interface List name",
+        label="Customer Cloud Firewall Interface List name automatically",
         required=True,
         default=True
     )
