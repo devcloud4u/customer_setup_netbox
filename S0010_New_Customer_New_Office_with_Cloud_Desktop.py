@@ -95,27 +95,9 @@ class S0010_New_Customer_New_Office_with_Cloud_Desktop(Script):
     customer_short_name = StringVar(description="Customer Short Name (e.g., 'Ali')", default="Ali")
     customer_office_place = StringVar(description="Customer Office Place (e.g., 'Istanbul')", default="Istanbul")
     customer_cloud_vlanid = IntegerVar(description="Customer Cloud VLAN ID (e.g., '10')", default=10)
-    customer_21_subnet = StringVar(description="Customer /21 Subnet Base (e.g., '10.201.16')", default="",
+    customer_21_subnet = StringVar(description="Customer /21 Subnet Base (e.g., '10.201.16')", default="10.2.0.16",
                                    required=False)
     local_vpn_ip = StringVar(description="Local VPN IP (e.g., '10.200.110.38')", default="10.200.110.38")
-
-    def fetch_available_21_subnet(self):
-        available_21_subnet = None
-        prefixes = Prefix.objects.filter(
-            prefix__net_mask_length=13,
-            status=PrefixStatusChoices.STATUS_CONTAINER,
-            role__name="Customer Office"
-        )
-
-        for prefix in prefixes:
-            child_prefixes = prefix.get_child_prefixes()
-            available_21_prefixes = [p for p in child_prefixes if p.prefix.prefixlen == 21 and not p.mark_utilized]
-            if available_21_prefixes:
-                available_21_subnet = available_21_prefixes[0].prefix
-                self.log_info(f"Found available /21 subnet: {available_21_subnet}")
-                break
-
-        return available_21_subnet
 
     def validate_and_format_subnet_base(ip_base):
         # Strip the subnet mask if present
@@ -133,15 +115,6 @@ class S0010_New_Customer_New_Office_with_Cloud_Desktop(Script):
 
     def run(self, data, commit):
         try:
-            # Fetch available /21 subnet if not provided by user
-            if not data['customer_21_subnet']:
-                available_21_subnet = self.fetch_available_21_subnet()
-                if available_21_subnet:
-                    self.log_info(f"Setting customer_21_subnet to: {available_21_subnet}")
-                    data['customer_21_subnet'] = str(available_21_subnet)
-                else:
-                    raise ValueError("No available /21 subnet found within /13 subnets")
-
             self.log_info(f"Customer /21 Subnet: {data['customer_21_subnet']}")
             validated_subnet_base = validate_and_format_subnet_base(data['customer_21_subnet'])
             self.log_info(f"Validated Subnet Base: {validated_subnet_base}")
