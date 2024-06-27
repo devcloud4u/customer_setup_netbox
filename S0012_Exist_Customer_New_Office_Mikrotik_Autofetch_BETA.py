@@ -91,12 +91,13 @@ class S0012_Exist_Customer_New_Office_Mikrotik_Autofetch_BETA(Script):
     customer_21_subnet = StringVar(
         default=get_customer_21_subnet_choices(),
         label="Customer 21 Subnet",
-        description="The first available subnet is automatically shown. Change subnet to /21",
+        description="The first available subnet in the Prefix tag 'Active Customer Office Subnet' is automatically shown",
         required=True
     )
 
     local_vpn_ip = StringVar(
         default=get_local_vpn_ip(),
+        description="The first available IP with the subnet prefix 'Active Customer OpenVPN Ip' is shown",
         label="Local VPN IP",
         required=True,
     )
