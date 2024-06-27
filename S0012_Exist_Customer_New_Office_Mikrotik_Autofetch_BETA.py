@@ -168,7 +168,7 @@ class S0012_Exist_Customer_New_Office_Mikrotik_Autofetch_BETA(Script):
 
     def run(self, data, commit):
         tenant = data['tenant']
-        self.log_info(f"Tenant: {tenant}")
+        self.log_info(f"Tenant: {dir(tenant)}")
         site = data['site']
         customer_office_place = data['customer_office_place']
         selected_subnet = data['customer_21_subnet']
@@ -675,7 +675,7 @@ class S0012_Exist_Customer_New_Office_Mikrotik_Autofetch_BETA(Script):
 #
 #         except ValueError as e:
 #             self.log_failure(str(e))
-#
+
         self.log_success("Script completed successfully.")
 
 
