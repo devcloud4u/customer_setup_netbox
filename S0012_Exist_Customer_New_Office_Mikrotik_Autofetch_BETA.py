@@ -252,14 +252,17 @@ class S0012_Exist_Customer_New_Office_Mikrotik_Autofetch_BETA(Script):
                 status="active",
             )
             ip_address.save()
+            self.log_info(f"local vpn ip_address created: {ip_address}")
 
             if customer_cloud_firewall_interface_list_name_automatically:
                 customer_cloud_firewall_interface_list_name = tenant.custom_field_data.get('cloud_mikrotik_interface_list_name')
+                self.log_info(f"customer_cloud_firewall_interface_list_name received: {customer_cloud_firewall_interface_list_name}")
                 if not customer_cloud_firewall_interface_list_name:
                     raise ValueError("cloud_mikrotik_interface_list_name must be defined in tenant")
 
             if customer_address_list_name_in_cloud_mikrotik_automatically:
                 customer_address_list_name_in_cloud_mikrotik = tenant.custom_field_data.get('cloud_mikrotik_ip_address_list')
+                self.log_info(f"customer_address_list_name_in_cloud_mikrotik received: {customer_address_list_name_in_cloud_mikrotik}")
                 if not customer_address_list_name_in_cloud_mikrotik:
                     raise ValueError("cloud_mikrotik_ip_address_list must be defined in tenant")
 
