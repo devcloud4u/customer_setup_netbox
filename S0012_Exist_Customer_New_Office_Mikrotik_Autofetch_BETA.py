@@ -341,7 +341,9 @@ add name=$OpenVPNCloudUsername password=$OpenVPNCloudPassword profile=$OpenVPNPr
 # firewall rule
 /ip firewall filter add action=accept chain=forward comment=$CustomerFirewallRuleComment connection-state=new dst-address-list=$CustomerAdresList in-interface-list=$CustomerInterfaceList out-interface-list=$CustomerInterfaceList src-address-list=$CustomerAdresList place-before=10
             '''
-            # Create the script template with generated variables and settings
+# end of Cloud Site mikrotik script
+
+            # Create the script template with generated variables and settings for new office
             script_template = f"""
 
 :global NameDevice "{customer_short_name}-{data['customer_office_place']}-Office"
@@ -643,46 +645,14 @@ set show-at-login=no
 # mikrotik mode change + give options
 /system/device-mode/update mode=enterprise scheduler=yes socks=yes fetch=yes pptp=yes l2tp=yes bandwidth-test=yes traffic-gen=yes sniffer=yes ipsec=yes romon=yes proxy=yes hotspot=yes smb=yes email=yes zerotier=yes container=yes
 # power off on physically in 5 min
-'''
-
-cloud_site_template = '''
-# Create vlan for customer subnet (Cloud vLan Interface)
-/interface vlan add interface=ether1-Trunk loop-protect=on name=$ClientVLanInterfaceName vlan-id=$ClientVLanID
-
-# interface list
-/interface list add name=$CustomerInterfaceList
-/interface list add include=$CustomerInterfaceList name=Customers
-
-# create openvpn interface
-/interface ovpn-server add name=$OpenVPNServerInterfaceName user=$OpenVPNCloudUsername
-# add openvpn interface to customer list
-/interface list member add interface=$OpenVPNServerInterfaceName list=$CustomerInterfaceList
-
-# add customer interface to customer interface list
-/interface list member add interface=$ClientVLanInterfaceName list=$CustomerInterfaceList
-
-# ip firewall
-# add vpn interface ip to customer
-/ip firewall address-list add address=$OpenVPNLocalIP list=$CustomerAdresList
-# add big Office subnet
-/ip firewall address-list add address=$CustomerOfficeBigSubnet list=$CustomerAdresList
-# add customer cloud subnet to internet access list
-/ip firewall address-list add address=$CustomerCloudSubnet comment=$CustomerCloudSubnetComment list=CloudPC_Internet
-
-# Create openvpn
-/ppp secret
-add name=$OpenVPNCloudUsername password=$OpenVPNCloudPassword profile=$OpenVPNProfileName remote-address=$OpenVPNLocalIP routes=$CustomerOfficeBigSubnet service=ovpn
-
-# firewall rule
-/ip firewall filter add action=accept chain=forward comment=$CustomerFirewallRuleComment connection-state=new dst-address-list=$CustomerAdresList in-interface-list=$CustomerInterfaceList out-interface-list=$CustomerInterfaceList src-address-list=$CustomerAdresList place-before=10
-            """
-
+'''            """
+# Write to Office Site journal
             JournalEntry.objects.create(
                 assigned_object=office_site,
                 created_by=self.request.user,
                 comments=f'```\n{save_password_template}\n{script_template}\n```'
             )
-
+# Write to Cloud Site journal
             JournalEntry.objects.create(
                 assigned_object=cloud_site,
                 created_by=self.request.user,
