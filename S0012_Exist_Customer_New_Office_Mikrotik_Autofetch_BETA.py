@@ -169,9 +169,14 @@ class S0012_Exist_Customer_New_Office_Mikrotik_Autofetch_BETA(Script):
     def run(self, data, commit):
         tenant = data['tenant']
         self.log_info(f"Tenant: {dir(tenant)}")
-        self.log_info(f"Tenant: {tenant.get_custom_fields}")
-        self.log_info(f"Tenant: {tenant.custom_fields}")
-        self.log_info(f"Tenant: {tenant.custom_fields}")
+        self.log_info(f"tenant.custom_fields: {tenant.custom_fields}")
+        self.log_info(f"tenant.custom_fields.get('cloud_mikrotik_interface_list_name'): {tenant.custom_fields.get('cloud_mikrotik_interface_list_name')}")
+        self.log_info(f"tenant.get_custom_fields: {tenant.get_custom_fields}")
+        self.log_info(f"dir(tenant.get_custom_fields): {dir(tenant.get_custom_fields)}")
+        self.log_info(f"tenant.custom_field_data: {tenant.custom_field_data}")
+        self.log_info(f"dir(tenant.custom_field_data): {dir(tenant.custom_field_data)}")
+        self.log_info(f"tenant.get_custom_fields_by_group: {tenant.get_custom_fields_by_group}")
+        self.log_info(f"dir(tenant.get_custom_fields_by_group): {dir(tenant.get_custom_fields_by_group)}")
         site = data['site']
         customer_office_place = data['customer_office_place']
         selected_subnet = data['customer_21_subnet']
