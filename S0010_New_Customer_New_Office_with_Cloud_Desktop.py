@@ -87,7 +87,7 @@ def validate_and_format_subnet_base(ip_base):
 
 class S0010_New_Customer_New_Office_with_Cloud_Desktop(Script):
     class Meta:
-        name = "New Office Mikrotik Cloud Customer v3"
+        name = "S0010 New Customer New Office with Cloud Desktop"
         description = "Sets up tenant, sites, VLANs, and prefixes for a new customer"
         commit_default = True
 
