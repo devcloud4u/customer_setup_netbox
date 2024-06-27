@@ -2,7 +2,7 @@
 # rest same as new
 import random
 import netaddr
-from extras.scripts import Script, StringVar, IntegerVar, ObjectVar, ChoiceVar
+from extras.scripts import Script, StringVar, IntegerVar, ObjectVar, ChoiceVar, BooleanVar
 from dcim.models import Site
 from ipam.models import VLAN, Prefix, IPAddress as IPAMIPAddress
 from ipam.choices import PrefixStatusChoices
@@ -100,6 +100,13 @@ class S0012_Exist_Customer_New_Office_Mikrotik_Autofetch_BETA(Script):
         description="The first available IP with the subnet prefix 'Active Customer OpenVPN Ip' is shown",
         label="Local VPN IP",
         required=True,
+    )
+
+    customer_cloud_firewall_interface_list_name_automatically = BooleanVar(
+        description="Pls Check on Cloud Mikrotik 'Interfaces' --> 'Interface List' and find customer name",
+        label="Customer Cloud Firewall Interface List name",
+        required=True,
+        default=True
     )
 
     customer_cloud_firewall_interface_list_name = StringVar(
