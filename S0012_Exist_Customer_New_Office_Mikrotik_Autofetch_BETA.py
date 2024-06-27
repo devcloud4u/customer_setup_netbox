@@ -44,7 +44,7 @@ def get_customer_21_subnet_choices():
 
         for subnet in available_prefixes.iter_cidrs():
             if subnet.prefixlen <= 21:
-                return str(subnet)
+                return '.'.join(str(subnet).split('.')[:3])
                 available_subnets.append((str(subnet), str(subnet)))
 
     return available_subnets
@@ -91,6 +91,7 @@ class S0012_Exist_Customer_New_Office_Mikrotik_Autofetch_BETA(Script):
     customer_21_subnet = StringVar(
         default=get_customer_21_subnet_choices(),
         label="Customer 21 Subnet",
+        description="The first available subnet is automatically shown. Change subnet to /21",
         required=True
     )
 
