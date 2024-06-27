@@ -22,9 +22,10 @@
 
 
 import random
-from extras.scripts import Script, StringVar, IntegerVar
+import netaddr
+from extras.scripts import Script, StringVar, IntegerVar, ObjectVar, ChoiceVar, BooleanVar
 from dcim.models import Site
-from ipam.models import VLAN, Prefix
+from ipam.models import VLAN, Prefix, IPAddress as IPAMIPAddress
 from ipam.choices import PrefixStatusChoices
 from tenancy.models import Tenant, TenantGroup
 from extras.models import JournalEntry
@@ -255,6 +256,15 @@ class S0010_New_Customer_New_Office_with_Cloud_Desktop_V2(Script):
                 tenant=tenant
             )
             self.log_info(f"Infra prefix {'created' if created else 'retrieved'}: {infra_prefix.prefix}")
+
+            # Create the new IPAddress object and save it
+            ip_address = IPAMIPAddress(
+                address=f"{data['local_vpn_ip']}",
+                tenant=tenant,
+                status="active",
+            )
+            ip_address.save()
+            self.log_info(f"local vpn ip_address created: {ip_address}")
 
             password = generate_password(20)
 
