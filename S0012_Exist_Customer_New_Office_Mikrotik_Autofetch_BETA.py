@@ -55,12 +55,15 @@ def get_local_vpn_ip():
     tagged_prefix = Prefix.objects.filter(tags__in=[tag]).first()
 
     if not tagged_prefix:
-        return []
+        return None
 
     first_available_ip = tagged_prefix.get_first_available_ip()
 
-    return str(first_available_ip.ip) if first_available_ip else None
-
+    if first_available_ip:
+        ip_parts = str(first_available_ip).split('/')
+        ip_address = ip_parts[0]
+        return ip_address
+    return None
 
 
 class S0012_Exist_Customer_New_Office_Mikrotik_Autofetch_BETA(Script):
