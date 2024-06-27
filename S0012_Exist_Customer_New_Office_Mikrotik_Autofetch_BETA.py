@@ -168,7 +168,9 @@ class S0012_Exist_Customer_New_Office_Mikrotik_Autofetch_BETA(Script):
 
     def run(self, data, commit):
         tenant = data['tenant']
-        self.log_info(f"Tenant: {dir(tenant.custom_fields)}")
+        self.log_info(f"Tenant: {dir(tenant)}")
+        self.log_info(f"Tenant: {tenant.get_custom_fields}")
+        self.log_info(f"Tenant: {tenant.custom_fields}")
         self.log_info(f"Tenant: {tenant.custom_fields}")
         site = data['site']
         customer_office_place = data['customer_office_place']
