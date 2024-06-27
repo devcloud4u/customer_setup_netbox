@@ -62,7 +62,7 @@ def get_local_vpn_ip():
 
 class S0012_Exist_Customer_New_Office_Mikrotik_Autofetch_BETA(Script):
     class Meta:
-        name = "S0011 Exist Customer New Office Mikrotik"
+        name = "S0012 Exist Customer New Office Mikrotik Autofetch BETA"
         description = "Script with custom fields for tenant selection and additional customer information"
 
     tenant = ObjectVar(
