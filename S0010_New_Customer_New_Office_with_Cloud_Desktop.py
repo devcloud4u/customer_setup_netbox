@@ -95,7 +95,7 @@ class S0010_New_Customer_New_Office_with_Cloud_Desktop(Script):
     customer_short_name = StringVar(description="Customer Short Name (e.g., 'Ali')", default="Ali")
     customer_office_place = StringVar(description="Customer Office Place (e.g., 'Istanbul')", default="Istanbul")
     customer_cloud_vlanid = IntegerVar(description="Customer Cloud VLAN ID (e.g., '10')", default=10)
-    customer_21_subnet = StringVar(description="Customer /21 Subnet Base (e.g., '10.201.16')", default="10.2.0.16",
+    customer_21_subnet = StringVar(description="Customer /21 Subnet Base (e.g., '10.201.16')", default="10.201.16",
                                    required=False)
     local_vpn_ip = StringVar(description="Local VPN IP (e.g., '10.200.110.38')", default="10.200.110.38")
 
