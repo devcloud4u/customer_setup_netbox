@@ -167,8 +167,6 @@ class S0012_Exist_Customer_New_Office_Mikrotik_Autofetch_BETA(Script):
         return str(ip + count)
 
     def run(self, data, commit):
-        self.log_info(f"tenant.custom_field_data.get('cloud_mikrotik_interface_list_name'): {tenant.custom_field_data.get('cloud_mikrotik_interface_list_name')}")
-
         try:
             cloud_site = data['site']
             tenant = data['tenant']
