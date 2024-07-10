@@ -593,7 +593,7 @@ set show-at-login=no
 
 # interface list
 /interface list add name=$CustomerInterfaceList
-/interface list add include=$CustomerInterfaceList name=Customers
+/interface list set Customers include=$CustomerInterfaceList
 
 # create openvpn interface 
 /interface ovpn-server add name=$OpenVPNServerInterfaceName user=$OpenVPNCloudUsername
