@@ -112,6 +112,10 @@ def get_local_vpn_ip():
     if not tagged_prefix:
         return []
 
+    first_available_ip = tagged_prefix.get_first_available_ip()
+    if '/24' in first_available_ip:
+        return first_available_ip.split('/')[0]
+
     return tagged_prefix.get_first_available_ip()
 
 
