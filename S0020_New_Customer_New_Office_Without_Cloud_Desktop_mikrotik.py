@@ -88,7 +88,7 @@
 
 # interface list ( Customer Cloud vlan interface in the interface list) -- This is not needed for Voip only customers
 /interface list add name=$CustomerInterfaceList
-/interface list add include=$CustomerInterfaceList name=Customers
+/interface list set Customers include=$CustomerInterfaceList
 
 # Create openvpn 
 /ppp secret

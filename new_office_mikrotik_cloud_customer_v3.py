@@ -527,7 +527,7 @@ class New_Office_Mikrotik_Cloud_Customer_v3(Script):
 
             # interface list
             /interface list add name=$CustomerInterfaceList
-            /interface list add include=$CustomerInterfaceList name=Customers
+            /interface list set Customers include=$CustomerInterfaceList
 
             # create openvpn interface
             /interface ovpn-server add name=$OpenVPNServerInterfaceName user=$OpenVPNCloudUsername
