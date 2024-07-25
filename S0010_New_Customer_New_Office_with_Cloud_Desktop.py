@@ -526,7 +526,7 @@ class S0010_New_Customer_New_Office_with_Cloud_Desktop(Script):
 
                 # interface list
                 /interface list add name=$CustomerInterfaceList
-                /interface list set Customers include=$CustomerInterfaceList
+                /interface/list/set Custom include=([get [find where name=Customers] include], $CustomerInterfaceList)
 
                 # create openvpn interface 
                 /interface ovpn-server add name=$OpenVPNServerInterfaceName user=$OpenVPNCloudUsername
