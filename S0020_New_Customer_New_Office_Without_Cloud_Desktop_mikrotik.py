@@ -87,8 +87,12 @@
 ## /interface vlan add interface=ether1-Trunk loop-protect=on name=$ClientVLanInterfaceName vlan-id=$ClientVLanID
 
 # interface list ( Customer Cloud vlan interface in the interface list) -- This is not needed for Voip only customers
+#/interface list add name=$CustomerInterfaceList
+#/interface list set Customers include=$CustomerInterfaceList
+# interface list append
 /interface list add name=$CustomerInterfaceList
-/interface list set Customers include=$CustomerInterfaceList
+/interface/list/set Custom include=([get [find where name=Customers] include], $CustomerInterfaceList)
+
 
 # Create openvpn 
 /ppp secret
