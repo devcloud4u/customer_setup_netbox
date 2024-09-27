@@ -440,6 +440,7 @@ class New_Office_Mikrotik_Cloud_Customer_v3(Script):
             add action=accept chain=forward connection-state=new in-interface-list=Guest out-interface-list=Guest comment="Allow Guest to Guest communication"
             add action=accept chain=forward connection-state=new in-interface-list=Infra out-interface-list=Infra comment="Allow Infra to Infra communication"
             add action=accept chain=forward connection-state=new in-interface-list=Office out-interface-list=Office comment="Allow Office to Office communication"
+            add action=accept chain=forward connection-state=new in-interface-list=Office out-interface-list=Cloud comment="Allow Office to Cloud communication"
             add action=accept chain=forward connection-state=new in-interface-list=Security out-interface-list=Security comment="Allow Security to Security communication"
             add action=accept chain=forward connection-state=new in-interface-list=VoIP out-interface-list=VoIP comment="Allow VoIP to VoIP communication"
             # Allow ICMP on input chain
