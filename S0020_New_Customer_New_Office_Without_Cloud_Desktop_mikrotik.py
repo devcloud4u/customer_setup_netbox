@@ -7,7 +7,6 @@
 # Customer Full name = Tenant name ** slugs automatic
 # Customer Short Name =  1 word of customer without space
 # Customer Office Place = Site name  ( 1 word without space)
-## Customer Cloud vLan id = Get form vcenter manually (user should get and enter)  #### Should be removed
 # Customer 21 subnet = Get automatically form Netbox and show (user can edit) (give also a link to prefix with new tab open option)
     # Search in prefixes /13 subnets with UTILIZATION status != 100% and role = "Customer Office" and status = Container (if this If this is too difficult let me know, there is another way in my mind that is much simpler. but this way is more automatic.)
     # in this /13 subnet check available child prefixes minimum available prefix /21
