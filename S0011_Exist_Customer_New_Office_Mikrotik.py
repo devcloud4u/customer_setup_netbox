@@ -10,6 +10,7 @@ from tenancy.models import Tenant, TenantGroup
 from extras.models import JournalEntry
 from django.template.defaultfilters import slugify
 from netaddr import IPNetwork, IPAddress
+from django.contrib.contenttypes.models import ContentType
 
 
 def generate_password(length=20):
@@ -123,6 +124,9 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
 
     def run(self, data, commit):
         try:
+            # Get the ContentType for the Site model
+            site_content_type = ContentType.objects.get_for_model(Site)
+
             cloud_site = data['site']
             vlan = VLAN.objects.filter(site=cloud_site).first()
             cloud_vlan_id = vlan.vid
@@ -148,13 +152,19 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
             aligned_office_prefix_base = self.align_to_subnet(validated_subnet_base, 21)
             office_prefix_str = f"{aligned_office_prefix_base}/21"
             self.log_info(f"Office Prefix: {office_prefix_str}")
+
+            # Create or get the Prefix and associate with the Site
             office_prefix, created = Prefix.objects.get_or_create(
                 prefix=office_prefix_str,
                 tenant=tenant,
                 status=PrefixStatusChoices.STATUS_CONTAINER,
                 is_pool=True
             )
-            office_prefix.site.set([office_site])
+            # Set the GenericRelation fields to associate the Prefix with the Site
+            office_prefix.scope_type = site_content_type
+            office_prefix.scope_id = office_site.id
+            office_prefix.save()
+
             self.log_info(f"/21 prefix for office site {'created' if created else 'retrieved'}: {office_prefix.prefix}")
 
             base_ip = aligned_office_prefix_base
@@ -174,21 +184,32 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
 
                 prefix_str = f"{subnet}/24"
                 self.log_info(f"{name} Prefix: {prefix_str}")
+
+                # Create or get the Prefix for the VLAN and associate with the Site
                 prefix, created = Prefix.objects.get_or_create(
                     prefix=prefix_str,
                     vlan=vlan,
                     tenant=tenant
                 )
-                prefix.site.set([office_site])
-                self.log_info(f"{name} prefix {'created' if created else 'retrieved'}: {prefix.prefix}")
+                prefix.scope_type = site_content_type
+                prefix.scope_id = office_site.id
+                prefix.save()
+
+                self.log_info(
+                    f"{name} prefix {'created' if created else 'retrieved'}: {prefix.prefix}")
 
             infra_prefix_str = f"{subnet_addresses[0]}/24"
             self.log_info(f"Infra Prefix: {infra_prefix_str}")
+
+            # Create or get the Infra Prefix and associate with the Site
             infra_prefix, created = Prefix.objects.get_or_create(
                 prefix=infra_prefix_str,
                 tenant=tenant
             )
-            infra_prefix.site.set([office_site])
+            infra_prefix.scope_type = site_content_type
+            infra_prefix.scope_id = office_site.id
+            infra_prefix.save()
+
             self.log_info(f"Infra prefix {'created' if created else 'retrieved'}: {infra_prefix.prefix}")
 
             password = generate_password(20)
