@@ -150,11 +150,11 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
             self.log_info(f"Office Prefix: {office_prefix_str}")
             office_prefix, created = Prefix.objects.get_or_create(
                 prefix=office_prefix_str,
-                site=office_site,
                 tenant=tenant,
                 status=PrefixStatusChoices.STATUS_CONTAINER,
                 is_pool=True
             )
+            office_prefix.site.set([office_site])
             self.log_info(f"/21 prefix for office site {'created' if created else 'retrieved'}: {office_prefix.prefix}")
 
             base_ip = aligned_office_prefix_base
@@ -176,19 +176,19 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
                 self.log_info(f"{name} Prefix: {prefix_str}")
                 prefix, created = Prefix.objects.get_or_create(
                     prefix=prefix_str,
-                    site=office_site,
                     vlan=vlan,
                     tenant=tenant
                 )
+                prefix.site.set([office_site])
                 self.log_info(f"{name} prefix {'created' if created else 'retrieved'}: {prefix.prefix}")
 
             infra_prefix_str = f"{subnet_addresses[0]}/24"
             self.log_info(f"Infra Prefix: {infra_prefix_str}")
             infra_prefix, created = Prefix.objects.get_or_create(
                 prefix=infra_prefix_str,
-                site=office_site,
                 tenant=tenant
             )
+            infra_prefix.site.set([office_site])
             self.log_info(f"Infra prefix {'created' if created else 'retrieved'}: {infra_prefix.prefix}")
 
             password = generate_password(20)
