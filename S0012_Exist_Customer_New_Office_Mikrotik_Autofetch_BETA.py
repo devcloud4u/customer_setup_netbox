@@ -8,6 +8,7 @@ from ipam.models import VLAN, Prefix, IPAddress as IPAMIPAddress
 from ipam.choices import PrefixStatusChoices
 from tenancy.models import Tenant, TenantGroup
 from extras.models import JournalEntry
+from django.contrib.contenttypes.models import ContentType
 from django.template.defaultfilters import slugify
 from netaddr import IPNetwork, IPAddress
 from extras.models import Tag
@@ -174,6 +175,9 @@ class S0012_Exist_Customer_New_Office_Mikrotik_Autofetch_BETA(Script):
 
     def run(self, data, commit):
         try:
+            # Fetch the ContentType for Site
+            site_content_type = ContentType.objects.get_for_model(Site)
+
             cloud_site = data['site']
             tenant = data['tenant']
             local_vpn_ip = data['local_vpn_ip']
@@ -194,6 +198,8 @@ class S0012_Exist_Customer_New_Office_Mikrotik_Autofetch_BETA(Script):
 
             office_site_name = f"{customer_short_name} {data['customer_office_place']}"
             office_site_slug = slugify(office_site_name)
+
+            # Create or retrieve Office Site
             office_site, created = Site.objects.get_or_create(
                 name=office_site_name,
                 slug=office_site_slug,
@@ -205,15 +211,20 @@ class S0012_Exist_Customer_New_Office_Mikrotik_Autofetch_BETA(Script):
             aligned_office_prefix_base = self.align_to_subnet(validated_subnet_base, 21)
             office_prefix_str = f"{aligned_office_prefix_base}/21"
             self.log_info(f"Office Prefix: {office_prefix_str}")
+
+            # Create or retrieve the Office Prefix and associate with the Site
             office_prefix, created = Prefix.objects.get_or_create(
                 prefix=office_prefix_str,
-                site=office_site,
                 tenant=tenant,
                 status=PrefixStatusChoices.STATUS_CONTAINER,
                 is_pool=True
             )
+            office_prefix.scope_type = site_content_type
+            office_prefix.scope_id = office_site.id
+            office_prefix.save()
             self.log_info(f"/21 prefix for office site {'created' if created else 'retrieved'}: {office_prefix.prefix}")
 
+            # Continue with the VLAN and Prefix creation
             base_ip = aligned_office_prefix_base
             subnet_addresses = [self.increment_subnet(base_ip, i, 24) for i in range(5)]
             self.log_info(f"Subnet Addresses: {subnet_addresses}")
@@ -233,19 +244,24 @@ class S0012_Exist_Customer_New_Office_Mikrotik_Autofetch_BETA(Script):
                 self.log_info(f"{name} Prefix: {prefix_str}")
                 prefix, created = Prefix.objects.get_or_create(
                     prefix=prefix_str,
-                    site=office_site,
                     vlan=vlan,
                     tenant=tenant
                 )
+                prefix.scope_type = site_content_type
+                prefix.scope_id = office_site.id
+                prefix.save()
                 self.log_info(f"{name} prefix {'created' if created else 'retrieved'}: {prefix.prefix}")
 
+            # Create Infra Prefix
             infra_prefix_str = f"{subnet_addresses[0]}/24"
             self.log_info(f"Infra Prefix: {infra_prefix_str}")
             infra_prefix, created = Prefix.objects.get_or_create(
                 prefix=infra_prefix_str,
-                site=office_site,
                 tenant=tenant
             )
+            infra_prefix.scope_type = site_content_type
+            infra_prefix.scope_id = office_site.id
+            infra_prefix.save()
             self.log_info(f"Infra prefix {'created' if created else 'retrieved'}: {infra_prefix.prefix}")
 
             password = generate_password(20)
@@ -253,12 +269,12 @@ class S0012_Exist_Customer_New_Office_Mikrotik_Autofetch_BETA(Script):
 
             # Create the new IPAddress object and save it
             ip_address = IPAMIPAddress(
-                address=f"{local_vpn_ip}",
+                address=local_vpn_ip,
                 tenant=tenant,
-                status="active",
+                status="active"
             )
             ip_address.save()
-            self.log_info(f"local vpn ip_address created: {ip_address}")
+            self.log_info(f"Local VPN IP created: {ip_address.address}")
 
             if customer_cloud_firewall_interface_list_name_automatically:
                 customer_cloud_firewall_interface_list_name = tenant.custom_field_data.get('cloud_mikrotik_interface_list_name')

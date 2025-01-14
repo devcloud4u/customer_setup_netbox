@@ -30,6 +30,7 @@ from ipam.choices import PrefixStatusChoices
 from tenancy.models import Tenant, TenantGroup
 from extras.models import JournalEntry
 from django.template.defaultfilters import slugify
+from django.contrib.contenttypes.models import ContentType
 from netaddr import IPNetwork, IPAddress
 from extras.models import Tag
 
@@ -171,6 +172,9 @@ class S0010_New_Customer_New_Office_with_Cloud_Desktop_V2(Script):
 
     def run(self, data, commit):
         try:
+            # Get the ContentType for the Site model
+            site_content_type = ContentType.objects.get_for_model(Site)
+
             self.log_info(f"Customer /21 Subnet: {data['customer_21_subnet']}")
             validated_subnet_base = validate_and_format_subnet_base(data['customer_21_subnet'])
             self.log_info(f"Validated Subnet Base: {validated_subnet_base}")
@@ -198,13 +202,17 @@ class S0010_New_Customer_New_Office_with_Cloud_Desktop_V2(Script):
             aligned_office_prefix_base = align_to_subnet(validated_subnet_base, 21)
             office_prefix_str = f"{aligned_office_prefix_base}/21"
             self.log_info(f"Office Prefix: {office_prefix_str}")
+
+            # Create or get the Prefix for the office and associate with the Site
             office_prefix, created = Prefix.objects.get_or_create(
                 prefix=office_prefix_str,
-                site=office_site,
                 tenant=tenant,
                 status=PrefixStatusChoices.STATUS_CONTAINER,
                 is_pool=True
             )
+            office_prefix.scope_type = site_content_type
+            office_prefix.scope_id = office_site.id
+            office_prefix.save()
             self.log_info(f"/21 prefix for office site {'created' if created else 'retrieved'}: {office_prefix.prefix}")
 
             cloud_vlan_id = int(data['customer_cloud_vlanid'])
@@ -219,12 +227,16 @@ class S0010_New_Customer_New_Office_with_Cloud_Desktop_V2(Script):
 
             cloud_prefix_str = f"10.0.{cloud_vlan_id}.0/24"
             self.log_info(f"Cloud Prefix: {cloud_prefix_str}")
+
+            # Create or get the Prefix for the cloud VLAN and associate with the Site
             cloud_prefix, created = Prefix.objects.get_or_create(
                 prefix=cloud_prefix_str,
-                site=cloud_site,
                 vlan=cloud_vlan,
                 tenant=tenant
             )
+            cloud_prefix.scope_type = site_content_type
+            cloud_prefix.scope_id = cloud_site.id
+            cloud_prefix.save()
             self.log_info(f"Cloud prefix {'created' if created else 'retrieved'}: {cloud_prefix.prefix}")
 
             base_ip = aligned_office_prefix_base
@@ -244,31 +256,39 @@ class S0010_New_Customer_New_Office_with_Cloud_Desktop_V2(Script):
 
                 prefix_str = f"{subnet}/24"
                 self.log_info(f"{name} Prefix: {prefix_str}")
+
+                # Create or get the Prefix for the VLAN and associate with the Site
                 prefix, created = Prefix.objects.get_or_create(
                     prefix=prefix_str,
-                    site=office_site,
                     vlan=vlan,
                     tenant=tenant
                 )
+                prefix.scope_type = site_content_type
+                prefix.scope_id = office_site.id
+                prefix.save()
                 self.log_info(f"{name} prefix {'created' if created else 'retrieved'}: {prefix.prefix}")
 
             infra_prefix_str = f"{subnet_addresses[0]}/24"
             self.log_info(f"Infra Prefix: {infra_prefix_str}")
+
+            # Create or get the Infra Prefix and associate with the Site
             infra_prefix, created = Prefix.objects.get_or_create(
                 prefix=infra_prefix_str,
-                site=office_site,
                 tenant=tenant
             )
+            infra_prefix.scope_type = site_content_type
+            infra_prefix.scope_id = office_site.id
+            infra_prefix.save()
             self.log_info(f"Infra prefix {'created' if created else 'retrieved'}: {infra_prefix.prefix}")
 
             # Create the new IPAddress object and save it
             ip_address = IPAMIPAddress(
-                address=f"{data['local_vpn_ip']}",
+                address=data['local_vpn_ip'],
                 tenant=tenant,
-                status="active",
+                status="active"
             )
             ip_address.save()
-            self.log_info(f"local vpn ip_address created: {ip_address}")
+            self.log_info(f"Local VPN IP address created: {ip_address}")
 
             password = generate_password(20)
 

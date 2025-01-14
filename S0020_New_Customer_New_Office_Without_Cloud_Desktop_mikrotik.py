@@ -28,6 +28,7 @@ from ipam.models import VLAN, Prefix, IPAddress as IPAMIPAddress
 from ipam.choices import PrefixStatusChoices
 from tenancy.models import Tenant, TenantGroup
 from extras.models import JournalEntry
+from django.contrib.contenttypes.models import ContentType
 from django.template.defaultfilters import slugify
 from netaddr import IPNetwork, IPAddress
 from extras.models import Tag
@@ -170,6 +171,9 @@ class S0020_New_Customer_New_Office_Without_Cloud_Desktop_mikrotik(Script):
 
     def run(self, data, commit):
         try:
+            # Fetch the ContentType for Site
+            site_content_type = ContentType.objects.get_for_model(Site)
+
             self.log_info(f"Customer /21 Subnet: {data['customer_21_subnet']}")
             validated_subnet_base = validate_and_format_subnet_base(data['customer_21_subnet'])
             self.log_info(f"Validated Subnet Base: {validated_subnet_base}")
@@ -185,20 +189,27 @@ class S0020_New_Customer_New_Office_Without_Cloud_Desktop_mikrotik(Script):
 
             office_site_name = f"{data['customer_short_name']} {data['customer_office_place']}"
             office_site_slug = slugify(office_site_name)
-            office_site, created = Site.objects.get_or_create(name=office_site_name, slug=office_site_slug,
-                                                              tenant=tenant)
+            office_site, created = Site.objects.get_or_create(
+                name=office_site_name,
+                slug=office_site_slug,
+                tenant=tenant
+            )
             self.log_info(f"Office site {'created' if created else 'retrieved'}: {office_site.name}")
 
             aligned_office_prefix_base = align_to_subnet(validated_subnet_base, 21)
             office_prefix_str = f"{aligned_office_prefix_base}/21"
             self.log_info(f"Office Prefix: {office_prefix_str}")
+
+            # Create or retrieve the Office Prefix and associate it with the Site
             office_prefix, created = Prefix.objects.get_or_create(
                 prefix=office_prefix_str,
-                site=office_site,
                 tenant=tenant,
                 status=PrefixStatusChoices.STATUS_CONTAINER,
                 is_pool=True
             )
+            office_prefix.scope_type = site_content_type
+            office_prefix.scope_id = office_site.id
+            office_prefix.save()
             self.log_info(f"/21 prefix for office site {'created' if created else 'retrieved'}: {office_prefix.prefix}")
 
             base_ip = aligned_office_prefix_base
@@ -220,19 +231,23 @@ class S0020_New_Customer_New_Office_Without_Cloud_Desktop_mikrotik(Script):
                 self.log_info(f"{name} Prefix: {prefix_str}")
                 prefix, created = Prefix.objects.get_or_create(
                     prefix=prefix_str,
-                    site=office_site,
                     vlan=vlan,
                     tenant=tenant
                 )
+                prefix.scope_type = site_content_type
+                prefix.scope_id = office_site.id
+                prefix.save()
                 self.log_info(f"{name} prefix {'created' if created else 'retrieved'}: {prefix.prefix}")
 
             infra_prefix_str = f"{subnet_addresses[0]}/24"
             self.log_info(f"Infra Prefix: {infra_prefix_str}")
             infra_prefix, created = Prefix.objects.get_or_create(
                 prefix=infra_prefix_str,
-                site=office_site,
                 tenant=tenant
             )
+            infra_prefix.scope_type = site_content_type
+            infra_prefix.scope_id = office_site.id
+            infra_prefix.save()
             self.log_info(f"Infra prefix {'created' if created else 'retrieved'}: {infra_prefix.prefix}")
 
             # Create the new IPAddress object and save it
