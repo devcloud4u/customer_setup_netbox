@@ -129,6 +129,9 @@ class S0011_Exist_Customer_New_Office_Mikrotik(Script):
 
             cloud_site = data['site']
             vlan = VLAN.objects.filter(site=cloud_site).first()
+            if vlan is None:
+                raise ValueError(f"No VLAN found for site {cloud_site.name}")
+
             cloud_vlan_id = vlan.vid
             cloud_vlan_name = self.format_vlan_id(cloud_vlan_id)
             customer_short_name = cloud_site.name.split(' ')[0]
