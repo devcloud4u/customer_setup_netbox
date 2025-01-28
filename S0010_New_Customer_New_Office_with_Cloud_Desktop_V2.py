@@ -210,8 +210,7 @@ class S0010_New_Customer_New_Office_with_Cloud_Desktop_V2(Script):
                 status=PrefixStatusChoices.STATUS_CONTAINER,
                 is_pool=True
             )
-            office_prefix.scope_type = site_content_type
-            office_prefix.scope_id = office_site.id
+            office_prefix.scope = office_site
             office_prefix.save()
             self.log_info(f"/21 prefix for office site {'created' if created else 'retrieved'}: {office_prefix.prefix}")
 
