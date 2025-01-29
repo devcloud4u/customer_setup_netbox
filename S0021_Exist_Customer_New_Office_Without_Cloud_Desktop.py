@@ -33,7 +33,7 @@ def generate_password(length=20):
     return ''.join(password)
 
 
-class S0011_Exist_Customer_New_Office_Mikrotik(Script):
+class S0021_Exist_Customer_New_Office_Without_Cloud_Desktop(Script):
     class Meta:
         name = "S0011 Exist Customer New Office Mikrotik"
         description = "Script with custom fields for tenant selection and additional customer information"
@@ -613,4 +613,4 @@ add name=$OpenVPNCloudUsername password=$OpenVPNCloudPassword profile=$OpenVPNPr
         self.log_success("Script completed successfully.")
 
 
-script = S0011_Exist_Customer_New_Office_Mikrotik
+script = S0021_Exist_Customer_New_Office_Without_Cloud_Desktop
