@@ -487,6 +487,8 @@ class S0010_New_Customer_New_Office_with_Cloud_Desktop(Script):
 
                 # add dhcp option to wificontrol (wificontrol unifi inform option)
                 /ip dhcp-server option add code=43 name=unifi-wificontrol value=0x010455115F33
+                /ip dhcp-server option sets add name=Infra_set options=unifi-wificontrol 
+                /ip dhcp-server set dhcp-option-set=Infra_Set DHCP_Infra
 
                 # link this option to first dhcp server ! first dhcp server should be infra dhcp server
                 # find in ui -ip --> DHCP server --> Networks
