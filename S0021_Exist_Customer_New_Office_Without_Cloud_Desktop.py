@@ -536,6 +536,8 @@ set show-at-login=no
 
 # add dhcp option to wificontrol (wificontrol unifi inform option)
 /ip dhcp-server option add code=43 name=unifi-wificontrol value=0x010455115F33
+/ip dhcp-server option sets add name=Infra_set options=unifi-wificontrol 
+/ip dhcp-server set dhcp-option-set=Infra_Set DHCP_Infra
 
 # link this option to first dhcp server ! first dhcp server should be infra dhcp server
 # find in ui -ip --> DHCP server --> Networks
@@ -570,8 +572,6 @@ set show-at-login=no
 '''
 
 cloud_site_template = '''
-# Create vlan for customer subnet (Cloud vLan Interface)
-/interface vlan add interface=ether1-Trunk loop-protect=on name=$ClientVLanInterfaceName vlan-id=$ClientVLanID
 
 # interface list
 /interface list add name=$CustomerInterfaceList
@@ -582,16 +582,11 @@ cloud_site_template = '''
 # add openvpn interface to customer list
 /interface list member add interface=$OpenVPNServerInterfaceName list=$CustomerInterfaceList
 
-# add customer interface to customer interface list
-/interface list member add interface=$ClientVLanInterfaceName list=$CustomerInterfaceList
-
 # ip firewall
 # add vpn interface ip to customer
 /ip firewall address-list add address=$OpenVPNLocalIP list=$CustomerAdresList
 # add big Office subnet
 /ip firewall address-list add address=$CustomerOfficeBigSubnet list=$CustomerAdresList
-# add customer cloud subnet to internet access list
-/ip firewall address-list add address=$CustomerCloudSubnet comment=$CustomerCloudSubnetComment list=CloudPC_Internet
 
 # Create openvpn 
 /ppp secret
