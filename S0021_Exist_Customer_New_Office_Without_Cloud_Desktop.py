@@ -35,7 +35,7 @@ def generate_password(length=20):
 
 class S0021_Exist_Customer_New_Office_Without_Cloud_Desktop(Script):
     class Meta:
-        name = "S0011 Exist Customer New Office Mikrotik"
+        name = "S0021 Exist Customer New Office Without Cloud Desktop"
         description = "Script with custom fields for tenant selection and additional customer information"
 
     tenant = ObjectVar(
