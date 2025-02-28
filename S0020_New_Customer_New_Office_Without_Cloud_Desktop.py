@@ -562,40 +562,40 @@ set show-at-login=no
 # power off on physically in 5 min
                 '''
 
-            cloud_site_template = '''
-
-# interface list
-/interface list add name=$CustomerInterfaceList
-/interface/list/set Custom include=([get [find where name=Customers] include], $CustomerInterfaceList)
-
-# create openvpn interface 
-/interface ovpn-server add name=$OpenVPNServerInterfaceName user=$OpenVPNCloudUsername
-# add openvpn interface to customer list
-/interface list member add interface=$OpenVPNServerInterfaceName list=$CustomerInterfaceList
-
-# ip firewall
-# add vpn interface ip to customer
-/ip firewall address-list add address=$OpenVPNLocalIP list=$CustomerAdresList
-# add big Office subnet
-/ip firewall address-list add address=$CustomerOfficeBigSubnet list=$CustomerAdresList
-
-# Create openvpn 
-/ppp secret
-add name=$OpenVPNCloudUsername password=$OpenVPNCloudPassword profile=$OpenVPNProfileName remote-address=$OpenVPNLocalIP routes=$OpenVPNOfficeSubnets service=ovpn
-
-# firewall rule 
-/ip firewall filter add action=accept chain=forward comment=$CustomerFirewallRuleComment connection-state=new dst-address-list=$CustomerAdresList in-interface-list=$CustomerInterfaceList out-interface-list=$CustomerInterfaceList src-address-list=$CustomerAdresList place-before=10
-                '''
+#             cloud_site_template = '''
+#
+# # interface list
+# /interface list add name=$CustomerInterfaceList
+# /interface/list/set Custom include=([get [find where name=Customers] include], $CustomerInterfaceList)
+#
+# # create openvpn interface
+# /interface ovpn-server add name=$OpenVPNServerInterfaceName user=$OpenVPNCloudUsername
+# # add openvpn interface to customer list
+# /interface list member add interface=$OpenVPNServerInterfaceName list=$CustomerInterfaceList
+#
+# # ip firewall
+# # add vpn interface ip to customer
+# /ip firewall address-list add address=$OpenVPNLocalIP list=$CustomerAdresList
+# # add big Office subnet
+# /ip firewall address-list add address=$CustomerOfficeBigSubnet list=$CustomerAdresList
+#
+# # Create openvpn
+# /ppp secret
+# add name=$OpenVPNCloudUsername password=$OpenVPNCloudPassword profile=$OpenVPNProfileName remote-address=$OpenVPNLocalIP routes=$OpenVPNOfficeSubnets service=ovpn
+#
+# # firewall rule
+# /ip firewall filter add action=accept chain=forward comment=$CustomerFirewallRuleComment connection-state=new dst-address-list=$CustomerAdresList in-interface-list=$CustomerInterfaceList out-interface-list=$CustomerInterfaceList src-address-list=$CustomerAdresList place-before=10
+#                 '''
             JournalEntry.objects.create(
                 assigned_object=office_site,
                 created_by=self.request.user,
                 comments=f'```\n{save_password_template}\n{script_template}\n{office_site_template}\n```'
             )
-            JournalEntry.objects.create(
-                assigned_object=cloud_site,
-                created_by=self.request.user,
-                comments=f'```\n{script_template}\n{cloud_site_template}\n```'
-            )
+            # JournalEntry.objects.create(
+            #     assigned_object=cloud_site,
+            #     created_by=self.request.user,
+            #     comments=f'```\n{script_template}\n{cloud_site_template}\n```'
+            # )
 
             self.log_success("Customer setup script completed successfully")
 
